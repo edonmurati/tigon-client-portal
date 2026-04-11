@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { ImpulseType, ImpulseStatus } from "@/generated/prisma";
+import { saveFile } from "@/lib/storage";
 
 const VALID_TYPES: ImpulseType[] = ["FEEDBACK", "CHANGE_REQUEST", "QUESTION", "IDEA"];
 const VALID_STATUSES: ImpulseStatus[] = ["NEW", "SEEN", "IN_PROGRESS", "DONE"];
@@ -86,19 +87,44 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  let type: string | undefined;
+  let title: string | undefined;
+  let content: string | undefined;
+  let projectAreaId: string | undefined;
+  let files: File[] = [];
 
-  const { type, title, content, projectAreaId } = body as {
-    type?: string;
-    title?: string;
-    content?: string;
-    projectAreaId?: string;
-  };
+  const contentType = req.headers.get("content-type") ?? "";
+
+  if (contentType.includes("multipart/form-data")) {
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch {
+      return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
+    }
+    type = (formData.get("type") as string) ?? undefined;
+    title = (formData.get("title") as string) ?? undefined;
+    content = (formData.get("content") as string) ?? undefined;
+    projectAreaId = (formData.get("projectAreaId") as string) || undefined;
+    files = formData.getAll("files").filter((f): f is File => f instanceof File);
+  } else {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+    const parsed = body as {
+      type?: string;
+      title?: string;
+      content?: string;
+      projectAreaId?: string;
+    };
+    type = parsed.type;
+    title = parsed.title;
+    content = parsed.content;
+    projectAreaId = parsed.projectAreaId;
+  }
 
   if (!type || !VALID_TYPES.includes(type as ImpulseType)) {
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
@@ -132,6 +158,28 @@ export async function POST(
     },
   });
 
+  // Save file attachments (optional — impulse is already created, failures are non-fatal)
+  if (files.length > 0) {
+    for (const file of files) {
+      try {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const { storagePath, sizeBytes } = await saveFile(buffer, file.name, `impulses/${impulse.id}`);
+        await prisma.impulseAttachment.create({
+          data: {
+            impulseId: impulse.id,
+            name: file.name,
+            displayName: null,
+            mimeType: file.type || "application/octet-stream",
+            sizeBytes,
+            storagePath,
+          },
+        });
+      } catch (err) {
+        console.warn(`[impulse/POST] Failed to save attachment "${file.name}":`, err);
+      }
+    }
+  }
+
   // Fire-and-forget notification
   fetch(
     `${process.env.N8N_WEBHOOK_BASE}/portal-impulse-created`,
@@ -145,6 +193,7 @@ export async function POST(
         clientName: user.clientName,
         projectName: project.name,
         authorName: user.name,
+        attachmentCount: files.length,
         portalUrl: `${process.env.NEXT_PUBLIC_APP_URL || "https://portal.tigonautomation.de"}/admin/impulse/${impulse.id}`,
       }),
     }

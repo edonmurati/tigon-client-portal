@@ -66,6 +66,7 @@ export async function PATCH(
     description?: string;
     status?: ProjectStatus;
     startDate?: string | null;
+    liveUrl?: string | null;
   };
 
   try {
@@ -78,6 +79,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
+  if (body.liveUrl != null && !body.liveUrl.startsWith("https://")) {
+    return NextResponse.json(
+      { error: "liveUrl must start with https://" },
+      { status: 400 }
+    );
+  }
+
   const project = await prisma.project.update({
     where: { id: projectId },
     data: {
@@ -88,6 +96,9 @@ export async function PATCH(
       ...(body.status ? { status: body.status } : {}),
       ...(body.startDate !== undefined
         ? { startDate: body.startDate ? new Date(body.startDate) : null }
+        : {}),
+      ...(body.liveUrl !== undefined
+        ? { liveUrl: body.liveUrl?.trim() || null }
         : {}),
     },
   });

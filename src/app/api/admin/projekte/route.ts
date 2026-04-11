@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     name?: string;
     description?: string;
     startDate?: string;
+    liveUrl?: string;
   };
 
   try {
@@ -21,11 +22,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { clientId, name, description, startDate } = body;
+  const { clientId, name, description, startDate, liveUrl } = body;
 
   if (!clientId || !name) {
     return NextResponse.json(
       { error: "clientId and name are required" },
+      { status: 400 }
+    );
+  }
+
+  if (liveUrl && !liveUrl.startsWith("https://")) {
+    return NextResponse.json(
+      { error: "liveUrl must start with https://" },
       { status: 400 }
     );
   }
@@ -42,6 +50,7 @@ export async function POST(req: NextRequest) {
       name: name.trim(),
       description: description?.trim() || null,
       startDate: startDate ? new Date(startDate) : null,
+      liveUrl: liveUrl?.trim() || null,
     },
   });
 
