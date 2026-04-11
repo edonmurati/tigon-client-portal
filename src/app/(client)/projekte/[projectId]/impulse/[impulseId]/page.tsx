@@ -2,7 +2,7 @@ import { getAuthUser } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, MessageSquare } from "lucide-react";
+import { ArrowLeft, MessageSquare, Paperclip, FileText, Image as ImageIcon } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { ImpulseTypeBadge, ImpulseStatusBadge } from "@/components/ui/badge";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,9 @@ export default async function ImpulseDetailPage({
         include: {
           author: { select: { id: true, name: true, role: true } },
         },
+        orderBy: { createdAt: "asc" },
+      },
+      attachments: {
         orderBy: { createdAt: "asc" },
       },
     },
@@ -83,6 +86,39 @@ export default async function ImpulseDetailPage({
           </p>
         </CardBody>
       </Card>
+
+      {/* Attachments */}
+      {impulse.attachments.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Paperclip className="w-4 h-4 text-ink-muted" />
+            <h2 className="text-xs font-medium text-ink-muted uppercase tracking-wider">
+              Anhaenge ({impulse.attachments.length})
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {impulse.attachments.map((att) => {
+              const isImage = att.mimeType.startsWith("image/");
+              return (
+                <a
+                  key={att.id}
+                  href={`/api/client/impulse-attachments/${att.id}/download`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 bg-dark-100 border border-border rounded-xl px-4 py-3 hover:border-accent/40 transition-colors"
+                >
+                  {isImage ? (
+                    <ImageIcon size={16} className="text-accent shrink-0" />
+                  ) : (
+                    <FileText size={16} className="text-ink-muted shrink-0" />
+                  )}
+                  <span className="text-sm text-surface truncate">{att.name}</span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Comments */}
       <section>

@@ -149,6 +149,28 @@ export default async function ImpulseDetailPage({ params }: PageProps) {
         </p>
       </div>
 
+      {/* Attachments */}
+      {impulse.attachments.length > 0 && (
+        <div className="bg-dark-100 border border-border rounded-xl p-6 mb-6">
+          <h2 className="text-xs font-medium text-ink-muted uppercase tracking-widest mb-4">
+            Anhaenge ({impulse.attachments.length})
+          </h2>
+          <div className="space-y-2">
+            {impulse.attachments.map((att) => (
+              <div key={att.id} className="flex items-center gap-3 py-2">
+                {att.mimeType.startsWith("image/") ? (
+                  <ImageIcon size={16} className="text-accent shrink-0" />
+                ) : (
+                  <FileText size={16} className="text-ink-muted shrink-0" />
+                )}
+                <span className="text-sm text-surface truncate flex-1">{att.name}</span>
+                <span className="text-xs text-ink-muted">{formatSize(att.sizeBytes)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Comment thread */}
       <div className="bg-dark-100 border border-border rounded-xl p-6">
         <h2 className="text-xs font-medium text-ink-muted uppercase tracking-widest mb-4">

@@ -2,7 +2,7 @@ import { getAuthUser } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { CheckCircle2, Circle, Plus, Layers } from "lucide-react";
+import { CheckCircle2, Circle, Plus, Layers, Monitor } from "lucide-react";
 import { Card, CardBody } from "@/components/ui/card";
 import { ProjectStatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,13 +55,21 @@ export default async function ProjectDetailPage({
         {project.description && (
           <p className="text-sm text-ink-muted max-w-2xl">{project.description}</p>
         )}
-        <div className="mt-4">
+        <div className="mt-4 flex items-center gap-3">
           <Link href={`/projekte/${project.id}/impulse/neu`}>
             <Button size="sm">
               <Plus className="w-4 h-4" />
               Neuen Impuls erstellen
             </Button>
           </Link>
+          {project.liveUrl && (
+            <Link href={`/projekte/${project.id}/live`}>
+              <Button size="sm" variant="ghost">
+                <Monitor className="w-4 h-4" />
+                Live Feedback
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
