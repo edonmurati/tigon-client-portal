@@ -96,6 +96,7 @@ model Project {
   name        String
   description String?       @db.Text
   status      ProjectStatus @default(ACTIVE)
+  liveUrl     String?
   startDate   DateTime?
   createdAt   DateTime      @default(now())
 
@@ -150,10 +151,11 @@ model Impulse {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  project  Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  area     ProjectArea?     @relation(fields: [projectAreaId], references: [id], onDelete: SetNull)
-  author   User             @relation(fields: [authorId], references: [id])
-  comments ImpulseComment[]
+  project     Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  area        ProjectArea?         @relation(fields: [projectAreaId], references: [id], onDelete: SetNull)
+  author      User                 @relation(fields: [authorId], references: [id])
+  comments    ImpulseComment[]
+  attachments ImpulseAttachment[]
 
   @@index([projectId])
   @@index([authorId])
@@ -316,4 +318,19 @@ model ActivityLog {
   @@index([userId])
   @@index([clientId])
   @@index([createdAt])
+}
+
+model ImpulseAttachment {
+  id          String   @id @default(cuid())
+  impulseId   String
+  name        String
+  displayName String?
+  mimeType    String
+  sizeBytes   Int
+  storagePath String
+  createdAt   DateTime @default(now())
+
+  impulse Impulse @relation(fields: [impulseId], references: [id], onDelete: Cascade)
+
+  @@index([impulseId])
 }
