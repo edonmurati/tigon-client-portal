@@ -51,6 +51,10 @@ model User {
   refreshTokens   RefreshToken[]
   impulses        Impulse[]
   impulseComments ImpulseComment[]
+  credentials     Credential[]     @relation("credentialCreator")
+  documents       Document[]       @relation("documentUploader")
+  notes           Note[]           @relation("noteAuthor")
+  activities      ActivityLog[]    @relation("activityUser")
 
   @@index([clientId])
 }
@@ -76,8 +80,14 @@ model Client {
   status           ClientStatus @default(ACTIVE)
   createdAt        DateTime     @default(now())
 
-  users    User[]
-  projects Project[]
+  users       User[]
+  projects    Project[]
+  contacts    ContactPerson[]
+  credentials Credential[]
+  documents   Document[]
+  notes       Note[]
+  servers     ServerEntry[]
+  activities  ActivityLog[]
 }
 
 model Project {
@@ -89,10 +99,14 @@ model Project {
   startDate   DateTime?
   createdAt   DateTime      @default(now())
 
-  client     Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  areas      ProjectArea[]
-  milestones Milestone[]
-  impulses   Impulse[]
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  areas       ProjectArea[]
+  milestones  Milestone[]
+  impulses    Impulse[]
+  credentials Credential[]
+  documents   Document[]
+  notes       Note[]
+  servers     ServerEntry[]
 
   @@index([clientId])
 }
@@ -157,4 +171,149 @@ model ImpulseComment {
   author  User    @relation(fields: [authorId], references: [id])
 
   @@index([impulseId])
+}
+
+enum CredentialType {
+  LOGIN
+  API_KEY
+  ENV_VARIABLE
+  SSH_KEY
+  DATABASE
+  OTHER
+}
+
+enum NoteType {
+  MEETING
+  CALL
+  EMAIL
+  INTERNAL
+}
+
+enum ServerStatus {
+  ONLINE
+  DEGRADED
+  OFFLINE
+  MAINTENANCE
+}
+
+model Credential {
+  id          String         @id @default(cuid())
+  clientId    String?
+  projectId   String?
+  label       String
+  type        CredentialType
+  url         String?
+  username    String?
+  encValue    String         @db.Text
+  encIv       String
+  encTag      String
+  notes       String?        @db.Text
+  createdById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  client    Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User     @relation("credentialCreator", fields: [createdById], references: [id])
+
+  @@index([clientId])
+  @@index([projectId])
+}
+
+model Document {
+  id           String   @id @default(cuid())
+  clientId     String?
+  projectId    String?
+  name         String
+  displayName  String?
+  mimeType     String
+  sizeBytes    Int
+  storagePath  String
+  category     String?
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  client     Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploadedBy User     @relation("documentUploader", fields: [uploadedById], references: [id])
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([category])
+}
+
+model ContactPerson {
+  id        String   @id @default(cuid())
+  clientId  String
+  name      String
+  role      String?
+  email     String?
+  phone     String?
+  isPrimary Boolean  @default(false)
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  clientId  String?
+  projectId String?
+  authorId  String
+  type      NoteType @default(INTERNAL)
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client  Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author  User     @relation("noteAuthor", fields: [authorId], references: [id])
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([authorId])
+}
+
+model ServerEntry {
+  id          String       @id @default(cuid())
+  clientId    String?
+  projectId   String?
+  name        String
+  provider    String?
+  url         String?
+  ip          String?
+  status      ServerStatus @default(ONLINE)
+  statusNote  String?
+  lastChecked DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  client  Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([projectId])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  meta       String?  @db.Text
+  clientId   String?
+  createdAt  DateTime @default(now())
+
+  user   User?   @relation("activityUser", fields: [userId], references: [id], onDelete: SetNull)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([clientId])
+  @@index([createdAt])
 }

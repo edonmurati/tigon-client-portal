@@ -2,10 +2,11 @@ import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Edit } from "lucide-react";
-import { ImpulseStatusBadge, ImpulseTypeBadge, ProjectStatusBadge } from "@/components/ui/badge";
+import { ArrowLeft, Edit, Plus, FileText } from "lucide-react";
+import { ImpulseStatusBadge, ImpulseTypeBadge, ProjectStatusBadge, CredentialTypeBadge } from "@/components/ui/badge";
 import { AreaManager } from "@/components/admin/area-manager";
 import { MilestoneManager } from "@/components/admin/milestone-manager";
+import { NoteList } from "@/components/admin/note-list";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -22,6 +23,12 @@ function timeAgo(date: Date | string): string {
   const days = Math.floor(hours / 24);
   if (days < 30) return `vor ${days} Tag${days === 1 ? "" : "en"}`;
   return d.toLocaleDateString("de-DE");
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export default async function ProjektDetailPage({ params }: PageProps) {
@@ -57,6 +64,47 @@ export default async function ProjektDetailPage({ params }: PageProps) {
   });
 
   if (!project) notFound();
+
+  // Fetch V2 CRM data
+  const [notes, credentials, documents] = await Promise.all([
+    prisma.note.findMany({
+      where: { projectId },
+      include: { author: { select: { id: true, name: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.credential.findMany({
+      where: { projectId },
+      select: {
+        id: true,
+        label: true,
+        type: true,
+        url: true,
+        username: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.document.findMany({
+      where: { projectId },
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        mimeType: true,
+        sizeBytes: true,
+        category: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  // Serialize dates for "use client" components
+  const serializedNotes = notes.map((n) => ({
+    ...n,
+    createdAt: n.createdAt.toISOString(),
+    updatedAt: n.updatedAt.toISOString(),
+  }));
 
   const totalMilestones = project.milestones.length;
   const completedMilestones = project.milestones.filter((m) => !!m.completedAt).length;
@@ -207,6 +255,97 @@ export default async function ProjektDetailPage({ params }: PageProps) {
           </div>
         </div>
       )}
+
+      {/* Notizen Section */}
+      <section className="mt-6">
+        <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-surface">Notizen</h2>
+          </div>
+          <div className="p-5">
+            <NoteList notes={serializedNotes} projectId={projectId} />
+          </div>
+        </div>
+      </section>
+
+      {/* Zugangsdaten Section */}
+      <section className="mt-6">
+        <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-surface">Zugangsdaten</h2>
+            <Link
+              href={`/admin/zugangsdaten/neu?projectId=${projectId}`}
+              className="text-xs text-accent hover:text-accent-hover flex items-center gap-1 transition-colors"
+            >
+              <Plus size={12} /> Neu
+            </Link>
+          </div>
+          {credentials.length === 0 ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-sm text-ink-muted">Noch keine Zugangsdaten</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {credentials.map((cred) => (
+                <Link
+                  key={cred.id}
+                  href={`/admin/zugangsdaten/${cred.id}`}
+                  className="flex items-center gap-3 px-5 py-3 hover:bg-dark-200 transition-colors"
+                >
+                  <CredentialTypeBadge type={cred.type} />
+                  <span className="text-sm text-surface flex-1 truncate">{cred.label}</span>
+                  {cred.username && (
+                    <span className="text-xs text-ink-muted">{cred.username}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Dokumente Section */}
+      <section className="mt-6">
+        <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-surface">Dokumente</h2>
+            <Link
+              href={`/admin/dokumente/hochladen?projectId=${projectId}`}
+              className="text-xs text-accent hover:text-accent-hover flex items-center gap-1 transition-colors"
+            >
+              <Plus size={12} /> Hochladen
+            </Link>
+          </div>
+          {documents.length === 0 ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-sm text-ink-muted">Noch keine Dokumente</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {documents.map((doc) => (
+                <div key={doc.id} className="flex items-center gap-3 px-5 py-3">
+                  <FileText size={14} className="text-ink-muted shrink-0" />
+                  <span className="text-sm text-surface flex-1 truncate">
+                    {doc.displayName || doc.name}
+                  </span>
+                  {doc.category && (
+                    <span className="text-xs text-ink-muted bg-dark-300 px-2 py-0.5 rounded">
+                      {doc.category}
+                    </span>
+                  )}
+                  <span className="text-xs text-ink-muted">{formatSize(doc.sizeBytes)}</span>
+                  <a
+                    href={`/api/admin/dokumente/${doc.id}/download`}
+                    className="text-xs text-accent hover:text-accent-hover"
+                  >
+                    Download
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

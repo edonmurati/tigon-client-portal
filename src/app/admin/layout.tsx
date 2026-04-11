@@ -3,29 +3,27 @@
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Users, FolderOpen, Menu, X, LogOut } from "lucide-react";
+import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { ProtectedRoute } from "@/components/auth/auth-provider";
 
-const navItems = [
+const navSections = [
   {
-    href: "/admin/impulse",
-    label: "Impulse",
-    icon: Bell,
-    matchPrefix: "/admin/impulse",
+    items: [
+      { href: "/admin/impulse", label: "Impulse", icon: Bell, matchPrefix: "/admin/impulse" },
+      { href: "/admin/kunden", label: "Kunden", icon: Users, matchPrefix: "/admin/kunden" },
+      { href: "/admin/projekte", label: "Projekte", icon: FolderOpen, matchPrefix: "/admin/projekte" },
+    ],
   },
   {
-    href: "/admin/kunden",
-    label: "Kunden",
-    icon: Users,
-    matchPrefix: "/admin/kunden",
-  },
-  {
-    href: "/admin/projekte",
-    label: "Projekte",
-    icon: FolderOpen,
-    matchPrefix: "/admin/projekte",
+    label: "CRM",
+    items: [
+      { href: "/admin/zugangsdaten", label: "Zugangsdaten", icon: KeyRound, matchPrefix: "/admin/zugangsdaten" },
+      { href: "/admin/dokumente", label: "Dokumente", icon: FileText, matchPrefix: "/admin/dokumente" },
+      { href: "/admin/infrastruktur", label: "Infrastruktur", icon: Server, matchPrefix: "/admin/infrastruktur" },
+      { href: "/admin/aktivitaet", label: "Aktivität", icon: Activity, matchPrefix: "/admin/aktivitaet" },
+    ],
   },
 ];
 
@@ -65,32 +63,45 @@ function AdminSidebar({
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname.startsWith(item.matchPrefix);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative group",
-                isActive
-                  ? "bg-accent/10 text-accent border-l-2 border-accent pl-[10px]"
-                  : "text-ink-muted hover:text-surface hover:bg-dark-300"
-              )}
-            >
-              <Icon size={16} className="shrink-0" />
-              <span>{item.label}</span>
-              {item.href === "/admin/impulse" && unreadCount > 0 && (
-                <span className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-ink text-[10px] font-bold">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        {navSections.map((section, sIdx) => (
+          <div key={sIdx}>
+            {section.label && (
+              <div className="px-3 pt-4 pb-2">
+                <p className="text-[10px] font-medium text-ink-muted uppercase tracking-widest">
+                  {section.label}
+                </p>
+              </div>
+            )}
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname.startsWith(item.matchPrefix);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClose}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative group",
+                      isActive
+                        ? "bg-accent/10 text-accent border-l-2 border-accent pl-[10px]"
+                        : "text-ink-muted hover:text-surface hover:bg-dark-300"
+                    )}
+                  >
+                    <Icon size={16} className="shrink-0" />
+                    <span>{item.label}</span>
+                    {item.href === "/admin/impulse" && unreadCount > 0 && (
+                      <span className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-ink text-[10px] font-bold">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* User footer */}

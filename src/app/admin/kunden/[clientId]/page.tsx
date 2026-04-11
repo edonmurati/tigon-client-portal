@@ -2,9 +2,11 @@ import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Edit, Plus, UserPlus, FolderOpen, MessageSquare } from "lucide-react";
-import { ProjectStatusBadge } from "@/components/ui/badge";
+import { ArrowLeft, Edit, Plus, FolderOpen, MessageSquare, FileText } from "lucide-react";
+import { ProjectStatusBadge, CredentialTypeBadge, ServerStatusBadge } from "@/components/ui/badge";
 import { AddUserForm } from "./add-user-form";
+import { ContactManager } from "@/components/admin/contact-manager";
+import { NoteList } from "@/components/admin/note-list";
 
 const clientStatusLabels: Record<string, string> = {
   ACTIVE: "Aktiv",
@@ -17,6 +19,12 @@ const clientStatusColors: Record<string, string> = {
   PAUSED: "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20",
   ENDED: "text-ink-muted bg-dark-300 border border-border",
 };
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 interface PageProps {
   params: Promise<{ clientId: string }>;
@@ -54,6 +62,59 @@ export default async function KundeDetailPage({ params }: PageProps) {
   });
 
   if (!client) notFound();
+
+  // Fetch V2 CRM data
+  const [contacts, notes, credentials, documents, servers] = await Promise.all([
+    prisma.contactPerson.findMany({
+      where: { clientId },
+      orderBy: [{ isPrimary: "desc" }, { name: "asc" }],
+    }),
+    prisma.note.findMany({
+      where: { clientId },
+      include: { author: { select: { id: true, name: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.credential.findMany({
+      where: { clientId },
+      select: {
+        id: true,
+        label: true,
+        type: true,
+        url: true,
+        username: true,
+        notes: true,
+        createdAt: true,
+        project: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.document.findMany({
+      where: { clientId },
+      select: {
+        id: true,
+        name: true,
+        displayName: true,
+        mimeType: true,
+        sizeBytes: true,
+        category: true,
+        createdAt: true,
+        project: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.serverEntry.findMany({
+      where: { clientId },
+      include: { project: { select: { id: true, name: true } } },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  // Serialize dates for "use client" components
+  const serializedNotes = notes.map((n) => ({
+    ...n,
+    createdAt: n.createdAt.toISOString(),
+    updatedAt: n.updatedAt.toISOString(),
+  }));
 
   const formatDate = (date: Date | string) =>
     new Date(date).toLocaleDateString("de-DE", {
@@ -217,6 +278,147 @@ export default async function KundeDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* Kontaktpersonen Section */}
+      <section className="mt-6">
+        <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-surface">Kontaktpersonen</h2>
+          </div>
+          <div className="p-5">
+            <ContactManager clientId={clientId} initialContacts={contacts} />
+          </div>
+        </div>
+      </section>
+
+      {/* Notizen Section */}
+      <section className="mt-6">
+        <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-surface">Notizen</h2>
+          </div>
+          <div className="p-5">
+            <NoteList notes={serializedNotes} clientId={clientId} />
+          </div>
+        </div>
+      </section>
+
+      {/* Zugangsdaten Section */}
+      <section className="mt-6">
+        <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-surface">Zugangsdaten</h2>
+            <Link
+              href={`/admin/zugangsdaten/neu?clientId=${clientId}`}
+              className="text-xs text-accent hover:text-accent-hover flex items-center gap-1 transition-colors"
+            >
+              <Plus size={12} /> Neu
+            </Link>
+          </div>
+          {credentials.length === 0 ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-sm text-ink-muted">Noch keine Zugangsdaten</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {credentials.map((cred) => (
+                <Link
+                  key={cred.id}
+                  href={`/admin/zugangsdaten/${cred.id}`}
+                  className="flex items-center gap-3 px-5 py-3 hover:bg-dark-200 transition-colors"
+                >
+                  <CredentialTypeBadge type={cred.type} />
+                  <span className="text-sm text-surface flex-1 truncate">{cred.label}</span>
+                  {cred.username && (
+                    <span className="text-xs text-ink-muted">{cred.username}</span>
+                  )}
+                  {cred.project && (
+                    <span className="text-xs text-ink-muted">{cred.project.name}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Dokumente Section */}
+      <section className="mt-6">
+        <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-surface">Dokumente</h2>
+            <Link
+              href={`/admin/dokumente/hochladen?clientId=${clientId}`}
+              className="text-xs text-accent hover:text-accent-hover flex items-center gap-1 transition-colors"
+            >
+              <Plus size={12} /> Hochladen
+            </Link>
+          </div>
+          {documents.length === 0 ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-sm text-ink-muted">Noch keine Dokumente</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {documents.map((doc) => (
+                <div key={doc.id} className="flex items-center gap-3 px-5 py-3">
+                  <FileText size={14} className="text-ink-muted shrink-0" />
+                  <span className="text-sm text-surface flex-1 truncate">
+                    {doc.displayName || doc.name}
+                  </span>
+                  {doc.category && (
+                    <span className="text-xs text-ink-muted bg-dark-300 px-2 py-0.5 rounded">
+                      {doc.category}
+                    </span>
+                  )}
+                  <span className="text-xs text-ink-muted">{formatSize(doc.sizeBytes)}</span>
+                  <a
+                    href={`/api/admin/dokumente/${doc.id}/download`}
+                    className="text-xs text-accent hover:text-accent-hover"
+                  >
+                    Download
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Infrastruktur Section */}
+      <section className="mt-6">
+        <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium text-surface">Infrastruktur</h2>
+            <Link
+              href="/admin/infrastruktur"
+              className="text-xs text-ink-muted hover:text-surface transition-colors"
+            >
+              Alle anzeigen →
+            </Link>
+          </div>
+          {servers.length === 0 ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-sm text-ink-muted">Noch keine Server</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {servers.map((srv) => (
+                <div key={srv.id} className="flex items-center gap-3 px-5 py-3">
+                  <ServerStatusBadge status={srv.status} />
+                  <span className="text-sm text-surface flex-1 truncate">{srv.name}</span>
+                  {srv.provider && (
+                    <span className="text-xs text-ink-muted">{srv.provider}</span>
+                  )}
+                  {srv.project && (
+                    <span className="text-xs text-ink-muted">{srv.project.name}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
