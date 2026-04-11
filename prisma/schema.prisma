@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+enum ClientStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
+
+enum ImpulseType {
+  FEEDBACK
+  CHANGE_REQUEST
+  QUESTION
+  IDEA
+}
+
+enum ImpulseStatus {
+  NEW
+  SEEN
+  IN_PROGRESS
+  DONE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role
+  clientId     String?
+  createdAt    DateTime @default(now())
+
+  client          Client?          @relation(fields: [clientId], references: [id])
+  refreshTokens   RefreshToken[]
+  impulses        Impulse[]
+  impulseComments ImpulseComment[]
+
+  @@index([clientId])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Client {
+  id               String       @id @default(cuid())
+  name             String
+  slug             String       @unique
+  partnershipScope String?      @db.Text
+  status           ClientStatus @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+
+  users    User[]
+  projects Project[]
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  clientId    String
+  name        String
+  description String?       @db.Text
+  status      ProjectStatus @default(ACTIVE)
+  startDate   DateTime?
+  createdAt   DateTime      @default(now())
+
+  client     Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  areas      ProjectArea[]
+  milestones Milestone[]
+  impulses   Impulse[]
+
+  @@index([clientId])
+}
+
+model ProjectArea {
+  id        String @id @default(cuid())
+  projectId String
+  name      String
+  sortOrder Int    @default(0)
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  impulses Impulse[]
+
+  @@index([projectId])
+}
+
+model Milestone {
+  id          String    @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Impulse {
+  id            String        @id @default(cuid())
+  projectId     String
+  projectAreaId String?
+  authorId      String
+  type          ImpulseType
+  title         String
+  content       String        @db.Text
+  status        ImpulseStatus @default(NEW)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  project  Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  area     ProjectArea?     @relation(fields: [projectAreaId], references: [id], onDelete: SetNull)
+  author   User             @relation(fields: [authorId], references: [id])
+  comments ImpulseComment[]
+
+  @@index([projectId])
+  @@index([authorId])
+  @@index([status])
+}
+
+model ImpulseComment {
+  id        String   @id @default(cuid())
+  impulseId String
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  impulse Impulse @relation(fields: [impulseId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@index([impulseId])
+}
