@@ -23,6 +23,7 @@ export default async function EditProjektPage({ params }: PageProps) {
       description: true,
       status: true,
       startDate: true,
+      liveUrl: true,
       client: { select: { id: true, name: true } },
     },
   });
@@ -58,6 +59,7 @@ export default async function EditProjektPage({ params }: PageProps) {
           startDate: project.startDate
             ? project.startDate.toISOString()
             : null,
+          liveUrl: project.liveUrl ?? null,
         }}
       />
     </div>

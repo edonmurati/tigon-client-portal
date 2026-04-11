@@ -2,13 +2,19 @@ import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, FileText } from "lucide-react";
 import { ImpulseStatusBadge, ImpulseTypeBadge } from "@/components/ui/badge";
 import { CommentThread } from "@/components/admin/comment-thread";
 import { StatusSelect } from "@/components/admin/status-select";
 
 interface PageProps {
   params: Promise<{ impulseId: string }>;
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function formatDate(date: Date | string): string {
@@ -48,6 +54,9 @@ export default async function ImpulseDetailPage({ params }: PageProps) {
             select: { id: true, name: true, role: true },
           },
         },
+        orderBy: { createdAt: "asc" },
+      },
+      attachments: {
         orderBy: { createdAt: "asc" },
       },
     },

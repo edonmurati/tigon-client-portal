@@ -18,6 +18,7 @@ interface ProjectFormProps {
     description?: string;
     status?: ProjectStatus;
     startDate?: string | null;
+    liveUrl?: string | null;
   };
 }
 
@@ -48,6 +49,7 @@ export function ProjectForm({
       ? new Date(initialData.startDate).toISOString().split("T")[0]
       : ""
   );
+  const [liveUrl, setLiveUrl] = useState(initialData?.liveUrl ?? "");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +70,7 @@ export function ProjectForm({
             name: name.trim(),
             description: description.trim() || undefined,
             startDate: startDate || undefined,
+            liveUrl: liveUrl.trim() || undefined,
           }),
         });
         const data = await res.json();
@@ -87,6 +90,7 @@ export function ProjectForm({
             description: description.trim() || null,
             status,
             startDate: startDate || null,
+            liveUrl: liveUrl.trim() || null,
           }),
         });
         const data = await res.json();
@@ -132,6 +136,14 @@ export function ProjectForm({
         type="date"
         value={startDate}
         onChange={(e) => setStartDate(e.target.value)}
+      />
+
+      <Input
+        label="Live-URL"
+        type="url"
+        value={liveUrl}
+        onChange={(e) => setLiveUrl(e.target.value)}
+        placeholder="https://example.com"
       />
 
       {mode === "edit" && (
