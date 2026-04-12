@@ -17,10 +17,10 @@ async function main() {
   const adminPassword = await hash("admin123", 12);
 
   const edon = await prisma.user.upsert({
-    where: { email: "edon@tigonautomation.de" },
+    where: { email: "edon.muratovic@tigonautomation.de" },
     update: {},
     create: {
-      email: "edon@tigonautomation.de",
+      email: "edon.muratovic@tigonautomation.de",
       passwordHash: adminPassword,
       name: "Edon Muratovic",
       role: "ADMIN",
@@ -28,10 +28,10 @@ async function main() {
   });
 
   const gent = await prisma.user.upsert({
-    where: { email: "gent@tigonautomation.de" },
+    where: { email: "gent.cungu@tigonautomation.de" },
     update: {},
     create: {
-      email: "gent@tigonautomation.de",
+      email: "gent.cungu@tigonautomation.de",
       passwordHash: adminPassword,
       name: "Gent Cungu",
       role: "ADMIN",
@@ -833,7 +833,7 @@ async function main() {
   console.log(`  Project: ${vaskoProject.name}`);
 
   console.log("\nSeed complete!");
-  console.log("  Admins: edon@tigonautomation.de / gent@tigonautomation.de (admin123)");
+  console.log("  Admins: edon.muratovic@tigonautomation.de / gent.cungu@tigonautomation.de (admin123)");
   console.log("  Clients (with login): ap@fachwelt-verlag.de / marlon@horbach.de / tuna@finsense.de / kontakt@bestattung-schmid.de / info@vw-rosenheim.de / info@luminar-hotel.de / vasko@societydefive.com (client123)");
   console.log("  Clients (no login): Montenegro Hotels, WMK Architekten, paricon AG");
   console.log("  Total clients: 10");
