@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus, Files } from "lucide-react";
 import { DocumentList } from "@/components/admin/document-list";
+import { DocumentFilters } from "@/components/admin/document-filters";
 
 export default async function DokumentePage({
   searchParams,
@@ -67,54 +68,7 @@ export default async function DokumentePage({
 
       {/* Filters */}
       {(clients.length > 0 || distinctCategories.length > 0) && (
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <form method="GET" className="flex flex-wrap gap-3">
-            {clients.length > 0 && (
-              <select
-                name="clientId"
-                defaultValue={clientId ?? ""}
-                onChange={(e) => {
-                  const form = e.target.closest("form") as HTMLFormElement;
-                  form?.requestSubmit();
-                }}
-                className="bg-dark-200 border border-border rounded-xl px-4 py-2 text-sm text-surface focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer"
-              >
-                <option value="">Alle Kunden</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            )}
-            {distinctCategories.length > 0 && (
-              <select
-                name="category"
-                defaultValue={category ?? ""}
-                onChange={(e) => {
-                  const form = e.target.closest("form") as HTMLFormElement;
-                  form?.requestSubmit();
-                }}
-                className="bg-dark-200 border border-border rounded-xl px-4 py-2 text-sm text-surface focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer"
-              >
-                <option value="">Alle Kategorien</option>
-                {distinctCategories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            )}
-            {(clientId || category) && (
-              <Link
-                href="/admin/dokumente"
-                className="inline-flex items-center px-3 py-2 text-xs text-ink-muted hover:text-surface border border-border rounded-xl transition-colors"
-              >
-                Filter zurücksetzen
-              </Link>
-            )}
-          </form>
-        </div>
+        <DocumentFilters clients={clients} categories={distinctCategories} />
       )}
 
       {documents.length === 0 ? (
