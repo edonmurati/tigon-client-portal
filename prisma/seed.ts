@@ -12,6 +12,10 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log("Seeding database...");
 
+  // ─── Migrate old admin emails ─────────────────────────────────────────────
+  await prisma.user.updateMany({ where: { email: "edon@tigonautomation.de" }, data: { email: "edon.muratovic@tigonautomation.de" } });
+  await prisma.user.updateMany({ where: { email: "gent@tigonautomation.de" }, data: { email: "gent.cungu@tigonautomation.de" } });
+
   // ─── Admins ───────────────────────────────────────────────────────────────
 
   const adminPassword = await hash("admin123", 12);
