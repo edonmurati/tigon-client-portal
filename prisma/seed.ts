@@ -425,9 +425,418 @@ async function main() {
 
   console.log("  ActivityLog: 4 entries");
 
+  // ─── Client: FinSense ─────────────────────────────────────────────────────
+
+  const finsense = await prisma.client.upsert({
+    where: { slug: "finsense" },
+    update: {},
+    create: {
+      name: "FinSense GmbH & Co. KG",
+      slug: "finsense",
+      status: "ACTIVE",
+      partnershipScope:
+        "Website-Redesign, DSGVO-konformes Dokumentenportal fuer Kreditvermittler",
+    },
+  });
+
+  const tuna = await prisma.user.upsert({
+    where: { email: "tuna@finsense.de" },
+    update: {},
+    create: {
+      email: "tuna@finsense.de",
+      passwordHash: clientPassword,
+      name: "Tuna Tuncali",
+      role: "CLIENT",
+      clientId: finsense.id,
+    },
+  });
+
+  console.log(
+    `  Client: ${finsense.name} — User: ${tuna.name} (${tuna.email})`
+  );
+
+  const finsenseWebsite = await prisma.project.upsert({
+    where: { id: "proj_finsense_website" },
+    update: {},
+    create: {
+      id: "proj_finsense_website",
+      clientId: finsense.id,
+      name: "Website Redesign",
+      description:
+        "Next.js Website-Redesign fuer Kreditvermittler — modern, responsive, 3-Step Consultation Modal",
+      status: "ACTIVE",
+      startDate: new Date("2026-03-15"),
+    },
+  });
+
+  const finsenseDoku = await prisma.project.upsert({
+    where: { id: "proj_finsense_dokumentenhub" },
+    update: {},
+    create: {
+      id: "proj_finsense_dokumentenhub",
+      clientId: finsense.id,
+      name: "DokumentenHub",
+      description:
+        "DSGVO-konformes Dokumentenportal — Broker-Dashboard, Client-Upload, automatische Erinnerungen",
+      status: "ACTIVE",
+      startDate: new Date("2026-04-01"),
+    },
+  });
+
+  console.log(
+    `  Projects: ${finsenseWebsite.name}, ${finsenseDoku.name}`
+  );
+
+  await prisma.contactPerson.createMany({
+    data: [
+      {
+        clientId: finsense.id,
+        name: "Tuna Tuncali",
+        role: "Geschaeftsfuehrer",
+        email: "tuna@finsense.de",
+        isPrimary: true,
+      },
+    ],
+  });
+
+  await prisma.note.createMany({
+    data: [
+      {
+        clientId: finsense.id,
+        projectId: finsenseWebsite.id,
+        authorId: edon.id,
+        type: "MEETING",
+        title: "Meeting 16.04. — Prototyp-Vorstellung",
+        content:
+          "Website-Prototyp und DokumentenHub-Konzept vorstellen. Tuna vertraut nur funktionierenden Produkten (Show-First).",
+      },
+    ],
+  });
+
+  await prisma.milestone.create({
+    data: {
+      projectId: finsenseWebsite.id,
+      title: "Prototyp-Vorstellung",
+      dueDate: new Date("2026-04-16"),
+      sortOrder: 0,
+    },
+  });
+
+  console.log("  FinSense: contacts (1), notes (1), milestones (1)");
+
+  // ─── Client: Bestattungen Schmid ──────────────────────────────────────────
+
+  const schmid = await prisma.client.upsert({
+    where: { slug: "bestattungen-schmid" },
+    update: {},
+    create: {
+      name: "Bestattungen Schmid",
+      slug: "bestattungen-schmid",
+      status: "ACTIVE",
+      partnershipScope: "Website-Redesign WordPress zu Next.js",
+    },
+  });
+
+  const schmidUser = await prisma.user.upsert({
+    where: { email: "kontakt@bestattung-schmid.de" },
+    update: {},
+    create: {
+      email: "kontakt@bestattung-schmid.de",
+      passwordHash: clientPassword,
+      name: "Herr Schmid",
+      role: "CLIENT",
+      clientId: schmid.id,
+    },
+  });
+
+  console.log(
+    `  Client: ${schmid.name} — User: ${schmidUser.name} (${schmidUser.email})`
+  );
+
+  const schmidProject = await prisma.project.upsert({
+    where: { id: "proj_schmid_website" },
+    update: {},
+    create: {
+      id: "proj_schmid_website",
+      clientId: schmid.id,
+      name: "Website Redesign",
+      description:
+        "WordPress zu Next.js Migration — wuerdevolles, zurueckhaltendes Design fuer Bestattungsbranche",
+      status: "ACTIVE",
+      startDate: new Date("2026-03-20"),
+    },
+  });
+
+  await prisma.contactPerson.createMany({
+    data: [
+      {
+        clientId: schmid.id,
+        name: "Herr Schmid",
+        role: "Inhaber",
+        email: "kontakt@bestattung-schmid.de",
+        isPrimary: true,
+      },
+    ],
+  });
+
+  console.log(`  Project: ${schmidProject.name}`);
+
+  // ─── Client: VW Rosenheim ─────────────────────────────────────────────────
+
+  const vwRosenheim = await prisma.client.upsert({
+    where: { slug: "vw-rosenheim" },
+    update: {},
+    create: {
+      name: "VW Rosenheim",
+      slug: "vw-rosenheim",
+      status: "ACTIVE",
+      partnershipScope: "Website-Redesign / Neubau",
+    },
+  });
+
+  const vwUser = await prisma.user.upsert({
+    where: { email: "info@vw-rosenheim.de" },
+    update: {},
+    create: {
+      email: "info@vw-rosenheim.de",
+      passwordHash: clientPassword,
+      name: "VW Rosenheim",
+      role: "CLIENT",
+      clientId: vwRosenheim.id,
+    },
+  });
+
+  console.log(
+    `  Client: ${vwRosenheim.name} — User: ${vwUser.name} (${vwUser.email})`
+  );
+
+  const vwProject = await prisma.project.upsert({
+    where: { id: "proj_vw_website" },
+    update: {},
+    create: {
+      id: "proj_vw_website",
+      clientId: vwRosenheim.id,
+      name: "Website Redesign",
+      description: "Moderner Webauftritt fuer Autohaus VW Rosenheim",
+      status: "ACTIVE",
+      startDate: new Date("2026-03-25"),
+    },
+  });
+
+  await prisma.contactPerson.createMany({
+    data: [
+      {
+        clientId: vwRosenheim.id,
+        name: "Ansprechpartner VW",
+        role: "Geschaeftsleitung",
+        email: "info@vw-rosenheim.de",
+        isPrimary: true,
+      },
+    ],
+  });
+
+  console.log(`  Project: ${vwProject.name}`);
+
+  // ─── Client: EID / LUMINAR Hotelservice ───────────────────────────────────
+
+  const eid = await prisma.client.upsert({
+    where: { slug: "eid" },
+    update: {},
+    create: {
+      name: "LUMINAR Hotelservice",
+      slug: "eid",
+      status: "PAUSED",
+      partnershipScope: "Premium Website fuer Hotelservice-Unternehmen",
+    },
+  });
+
+  const eidUser = await prisma.user.upsert({
+    where: { email: "info@luminar-hotel.de" },
+    update: {},
+    create: {
+      email: "info@luminar-hotel.de",
+      passwordHash: clientPassword,
+      name: "Herr Eid",
+      role: "CLIENT",
+      clientId: eid.id,
+    },
+  });
+
+  console.log(
+    `  Client: ${eid.name} — User: ${eidUser.name} (${eidUser.email})`
+  );
+
+  const eidProject = await prisma.project.upsert({
+    where: { id: "proj_eid_website" },
+    update: {},
+    create: {
+      id: "proj_eid_website",
+      clientId: eid.id,
+      name: "Website",
+      description:
+        "Premium-Website fuer Hotelservice — Night Audit, Front Office, Housekeeping, Dark Luxury Design",
+      status: "PAUSED",
+      startDate: new Date("2026-03-28"),
+    },
+  });
+
+  console.log(`  Project: ${eidProject.name}`);
+
+  // ─── Client: Montenegro Hotels ────────────────────────────────────────────
+
+  const montenegro = await prisma.client.upsert({
+    where: { slug: "montenegro" },
+    update: {},
+    create: {
+      name: "Montenegro Hotels",
+      slug: "montenegro",
+      status: "PAUSED",
+      partnershipScope: "Direct Booking Engine fuer Hotels in Ulcinj",
+    },
+  });
+
+  console.log(`  Client: ${montenegro.name} (no user — family contact)`);
+
+  const montenegroProject = await prisma.project.upsert({
+    where: { id: "proj_montenegro_booking" },
+    update: {},
+    create: {
+      id: "proj_montenegro_booking",
+      clientId: montenegro.id,
+      name: "Direct Booking Engine",
+      description:
+        "Einbettbares Widget — Echtzeit-Verfuegbarkeit, Online-Zahlung, Channel-Sync. Reduziert Booking.com 15-18% Kommission.",
+      status: "PAUSED",
+      startDate: new Date("2026-03-29"),
+    },
+  });
+
+  await prisma.contactPerson.createMany({
+    data: [
+      {
+        clientId: montenegro.id,
+        name: "Onkel (Hotelbesitzer)",
+        role: "Inhaber",
+        notes:
+          "Familie — null Barrieren. Hotel in Ulcinj, Montenegro.",
+        isPrimary: true,
+      },
+    ],
+  });
+
+  console.log(`  Project: ${montenegroProject.name}`);
+
+  // ─── Client: WMK Architekten ──────────────────────────────────────────────
+
+  const wmk = await prisma.client.upsert({
+    where: { slug: "wmk-architekten" },
+    update: {},
+    create: {
+      name: "WMK Architekten",
+      slug: "wmk-architekten",
+      status: "PAUSED",
+      partnershipScope: "Website-Redesign oder digitales Tool",
+    },
+  });
+
+  console.log(`  Client: ${wmk.name} (no user — no direct contact yet)`);
+
+  await prisma.contactPerson.createMany({
+    data: [
+      {
+        clientId: wmk.id,
+        name: "Kontakt ueber Gents Vater",
+        role: "Subunternehmer-Beziehung",
+        notes:
+          "Gents Vater arbeitet seit Jahren als Subunternehmer fuer dieses Buero.",
+        isPrimary: true,
+      },
+    ],
+  });
+
+  console.log("  WMK: contacts (1)");
+
+  // ─── Client: Paricon AG ───────────────────────────────────────────────────
+
+  const paricon = await prisma.client.upsert({
+    where: { slug: "paricon" },
+    update: {},
+    create: {
+      name: "paricon AG",
+      slug: "paricon",
+      status: "PAUSED",
+      partnershipScope: "Networking Node — kein direkter Business Case",
+    },
+  });
+
+  console.log(`  Client: ${paricon.name} (no user)`);
+
+  await prisma.contactPerson.createMany({
+    data: [
+      {
+        clientId: paricon.id,
+        name: "Kujtim",
+        role: "Angestellter (Freund)",
+        email: "kujtim@paricon.de",
+        notes:
+          "SAP-Firma, Zero Tech-Overlap. Langfristiges Networking.",
+        isPrimary: true,
+      },
+    ],
+  });
+
+  console.log("  Paricon: contacts (1)");
+
+  // ─── Client: Vasko / Society de Five ─────────────────────────────────────
+
+  const vasko = await prisma.client.upsert({
+    where: { slug: "vasko" },
+    update: {},
+    create: {
+      name: "Society de Five",
+      slug: "vasko",
+      status: "ACTIVE",
+      partnershipScope: "Pro-Bono Website — Fashion / D2C Dark Luxury",
+    },
+  });
+
+  const vaskoUser = await prisma.user.upsert({
+    where: { email: "vasko@societydefive.com" },
+    update: {},
+    create: {
+      email: "vasko@societydefive.com",
+      passwordHash: clientPassword,
+      name: "Vasko",
+      role: "CLIENT",
+      clientId: vasko.id,
+    },
+  });
+
+  console.log(
+    `  Client: ${vasko.name} — User: ${vaskoUser.name} (${vaskoUser.email})`
+  );
+
+  const vaskoProject = await prisma.project.upsert({
+    where: { id: "proj_vasko_website" },
+    update: {},
+    create: {
+      id: "proj_vasko_website",
+      clientId: vasko.id,
+      name: "Brand Website",
+      description:
+        "Pro-Bono Website fuer Fashion-Brand @societydefive — Dark Luxury Segment",
+      status: "ACTIVE",
+      startDate: new Date("2026-04-01"),
+    },
+  });
+
+  console.log(`  Project: ${vaskoProject.name}`);
+
   console.log("\nSeed complete!");
   console.log("  Admins: edon@tigonautomation.de / gent@tigonautomation.de (admin123)");
-  console.log("  Clients: ap@fachwelt-verlag.de / marlon@horbach.de (client123)");
+  console.log("  Clients (with login): ap@fachwelt-verlag.de / marlon@horbach.de / tuna@finsense.de / kontakt@bestattung-schmid.de / info@vw-rosenheim.de / info@luminar-hotel.de / vasko@societydefive.com (client123)");
+  console.log("  Clients (no login): Montenegro Hotels, WMK Architekten, paricon AG");
+  console.log("  Total clients: 10");
 }
 
 main()

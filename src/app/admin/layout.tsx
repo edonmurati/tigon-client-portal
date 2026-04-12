@@ -54,7 +54,7 @@ function AdminSidebar({
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-6 pt-6 pb-5 border-b border-border">
-        <p className="font-serif text-xl text-surface tracking-tightest">
+        <p className="font-serif text-2xl text-surface tracking-tightest">
           Tigon Portal
         </p>
         <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-medium bg-accent/20 text-accent tracking-wider uppercase">
@@ -187,7 +187,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           >
             <Menu size={20} />
           </button>
-          <p className="font-serif text-base text-surface tracking-tightest">
+          <p className="font-serif text-lg text-surface tracking-tightest">
             Tigon Portal
           </p>
         </header>
