@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
-import type { EntryCategory } from "@/generated/prisma";
+import { apiSuccess, isParseError, parseBody } from "@/lib/api";
+import { updateEntrySchema } from "@/lib/validations/knowledge";
 
 export async function GET(
   _req: NextRequest,
@@ -42,12 +43,8 @@ export async function PATCH(
 
   const { noteId } = await params;
 
-  let body: { category?: EntryCategory; title?: string; content?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const parsed = await parseBody(req, updateEntrySchema);
+  if (isParseError(parsed)) return parsed;
 
   const existing = await prisma.knowledgeEntry.findUnique({ where: { id: noteId } });
   if (!existing) {
@@ -57,9 +54,13 @@ export async function PATCH(
   const entry = await prisma.knowledgeEntry.update({
     where: { id: noteId },
     data: {
-      ...(body.category !== undefined ? { category: body.category } : {}),
-      ...(body.title !== undefined ? { title: body.title.trim() } : {}),
-      ...(body.content !== undefined ? { content: body.content.trim() } : {}),
+      ...(parsed.category !== undefined ? { category: parsed.category } : {}),
+      ...(parsed.title !== undefined ? { title: parsed.title } : {}),
+      ...(parsed.content !== undefined ? { content: parsed.content } : {}),
+      ...(parsed.tags !== undefined ? { tags: parsed.tags } : {}),
+      ...(parsed.pinned !== undefined ? { pinned: parsed.pinned } : {}),
+      ...(parsed.clientId !== undefined ? { clientId: parsed.clientId } : {}),
+      ...(parsed.projectId !== undefined ? { projectId: parsed.projectId } : {}),
     },
     include: {
       author: {
@@ -77,7 +78,7 @@ export async function PATCH(
     meta: { title: entry.title },
   });
 
-  return NextResponse.json({ entry });
+  return apiSuccess({ entry });
 }
 
 export async function DELETE(

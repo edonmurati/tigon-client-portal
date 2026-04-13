@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
-import type { EntryCategory } from "@/generated/prisma";
+import { apiSuccess, isParseError, parseBody } from "@/lib/api";
+import { createEntrySchema } from "@/lib/validations/knowledge";
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser();
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
         select: { id: true, name: true },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ pinned: "desc" }, { updatedAt: "desc" }],
   });
 
   return NextResponse.json({ entries });
@@ -36,31 +37,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: {
-    clientId?: string;
-    projectId?: string;
-    category?: EntryCategory;
-    title?: string;
-    content?: string;
-  };
+  const parsed = await parseBody(req, createEntrySchema);
+  if (isParseError(parsed)) return parsed;
 
-  try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const { clientId, projectId, category, title, content } = body;
-
-  if (!title || typeof title !== "string" || title.trim().length === 0) {
-    return NextResponse.json({ error: "Titel ist erforderlich" }, { status: 400 });
-  }
-  if (!content || typeof content !== "string" || content.trim().length === 0) {
-    return NextResponse.json({ error: "Inhalt ist erforderlich" }, { status: 400 });
-  }
-  if (!category) {
-    return NextResponse.json({ error: "Kategorie ist erforderlich" }, { status: 400 });
-  }
+  const { clientId, projectId, category, title, content, tags, pinned } = parsed;
 
   const entry = await prisma.knowledgeEntry.create({
     data: {
@@ -68,8 +48,10 @@ export async function POST(req: NextRequest) {
       projectId: projectId ?? null,
       authorId: user.id,
       category,
-      title: title.trim(),
-      content: content.trim(),
+      title,
+      content,
+      tags: tags ?? [],
+      pinned: pinned ?? false,
     },
     include: {
       author: {
@@ -87,5 +69,5 @@ export async function POST(req: NextRequest) {
     meta: { title: entry.title, category: entry.category },
   });
 
-  return NextResponse.json({ entry }, { status: 201 });
+  return apiSuccess({ entry }, 201);
 }
