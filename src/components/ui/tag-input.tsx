@@ -28,7 +28,15 @@ export function TagInput({
   const [draft, setDraft] = useState("");
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  const [prevDraft, setPrevDraft] = useState(draft);
+  const [prevOpen, setPrevOpen] = useState(open);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  if (prevDraft !== draft || prevOpen !== open) {
+    setPrevDraft(draft);
+    setPrevOpen(open);
+    setHighlight(0);
+  }
 
   const normalizedDraft = normalize(draft);
   const filtered = normalizedDraft
@@ -44,10 +52,6 @@ export function TagInput({
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
-
-  useEffect(() => {
-    setHighlight(0);
-  }, [draft, open]);
 
   function addTag(raw: string) {
     const n = normalize(raw);
