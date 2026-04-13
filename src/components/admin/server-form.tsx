@@ -19,7 +19,7 @@ interface ServerFormProps {
     projectId: string | null;
   };
   clients: { id: string; name: string }[];
-  projects: { id: string; name: string; clientId: string }[];
+  projects: { id: string; name: string; clientId: string | null }[];
   clientId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;

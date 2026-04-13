@@ -26,7 +26,7 @@ interface ServerEntry {
 interface InfrastrukturBoardProps {
   initialServers: ServerEntry[];
   clients: { id: string; name: string }[];
-  projects: { id: string; name: string; clientId: string }[];
+  projects: { id: string; name: string; clientId: string | null }[];
 }
 
 const statusColors: Record<ServerStatus, string> = {

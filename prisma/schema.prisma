@@ -7,13 +7,18 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
 enum Role {
   ADMIN
   CLIENT
 }
 
-enum ClientStatus {
+enum ClientStage {
+  COLD
+  WARM
   ACTIVE
+  PRO_BONO
   PAUSED
   ENDED
 }
@@ -22,6 +27,18 @@ enum ProjectStatus {
   ACTIVE
   COMPLETED
   PAUSED
+}
+
+enum ProjectType {
+  CLIENT_PROJECT
+  PRODUCT
+  INTERNAL
+}
+
+enum ProjectHealth {
+  GREEN
+  AMBER
+  RED
 }
 
 enum ImpulseType {
@@ -38,6 +55,47 @@ enum ImpulseStatus {
   DONE
 }
 
+enum CredentialType {
+  LOGIN
+  API_KEY
+  ENV_VARIABLE
+  SSH_KEY
+  DATABASE
+  OTHER
+}
+
+enum ServerStatus {
+  ONLINE
+  DEGRADED
+  OFFLINE
+  MAINTENANCE
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum EntryCategory {
+  CHANGELOG
+  DECISION
+  HANDOFF
+  IDEA
+  PLAN
+  RESEARCH
+  SPEC
+  PLAYBOOK
+  SOP
+  MEETING_NOTE
+  INSIGHT
+  JOURNAL
+  OTHER
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -53,7 +111,8 @@ model User {
   impulseComments ImpulseComment[]
   credentials     Credential[]     @relation("credentialCreator")
   documents       Document[]       @relation("documentUploader")
-  notes           Note[]           @relation("noteAuthor")
+  entries         KnowledgeEntry[] @relation("entryAuthor")
+  assignedTasks   Task[]           @relation("taskAssignee")
   activities      ActivityLog[]    @relation("activityUser")
 
   @@index([clientId])
@@ -72,44 +131,63 @@ model RefreshToken {
   @@index([userId])
 }
 
+// ─── Core Business ────────────────────────────────────────────────────────────
+
 model Client {
-  id               String       @id @default(cuid())
-  name             String
-  slug             String       @unique
-  partnershipScope String?      @db.Text
-  status           ClientStatus @default(ACTIVE)
-  createdAt        DateTime     @default(now())
+  id                  String      @id @default(cuid())
+  name                String
+  slug                String      @unique
+  partnershipScope    String?     @db.Text
+  stage               ClientStage @default(WARM)
+  industry            String?
+  website             String?
+  monthlyRevenueCents Int?
+  contractType        String?
+  createdAt           DateTime    @default(now())
 
   users       User[]
   projects    Project[]
   contacts    ContactPerson[]
   credentials Credential[]
   documents   Document[]
-  notes       Note[]
+  entries     KnowledgeEntry[]
   servers     ServerEntry[]
   activities  ActivityLog[]
+  tasks       Task[]
 }
 
 model Project {
   id          String        @id @default(cuid())
-  clientId    String
+  clientId    String?
   name        String
   description String?       @db.Text
   status      ProjectStatus @default(ACTIVE)
+  type        ProjectType   @default(CLIENT_PROJECT)
+  health      ProjectHealth @default(GREEN)
   startDate   DateTime?
+  budgetCents Int?
+  spentCents  Int?
+  repoUrl     String?
+  prodUrl     String?
+  stagingUrl  String?
+  stack       String[]
+  phase       String?
   createdAt   DateTime      @default(now())
 
-  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client      Client?        @relation(fields: [clientId], references: [id], onDelete: Cascade)
   areas       ProjectArea[]
   milestones  Milestone[]
   impulses    Impulse[]
   credentials Credential[]
   documents   Document[]
-  notes       Note[]
+  entries     KnowledgeEntry[]
   servers     ServerEntry[]
+  tasks       Task[]
 
   @@index([clientId])
 }
+
+// ─── Project Sub-Models ───────────────────────────────────────────────────────
 
 model ProjectArea {
   id        String @id @default(cuid())
@@ -137,6 +215,8 @@ model Milestone {
 
   @@index([projectId])
 }
+
+// ─── Impulse System ───────────────────────────────────────────────────────────
 
 model Impulse {
   id            String        @id @default(cuid())
@@ -173,28 +253,58 @@ model ImpulseComment {
   @@index([impulseId])
 }
 
-enum CredentialType {
-  LOGIN
-  API_KEY
-  ENV_VARIABLE
-  SSH_KEY
-  DATABASE
-  OTHER
+// ─── Task System ──────────────────────────────────────────────────────────────
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?      @db.Text
+  assigneeId  String?
+  clientId    String?
+  projectId   String?
+  priority    TaskPriority @default(NORMAL)
+  dueDate     DateTime?
+  completedAt DateTime?
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  assignee User?    @relation("taskAssignee", fields: [assigneeId], references: [id])
+  client   Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project  Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([assigneeId])
+  @@index([clientId])
+  @@index([projectId])
+  @@index([completedAt])
 }
 
-enum NoteType {
-  MEETING
-  CALL
-  EMAIL
-  INTERNAL
+// ─── Knowledge Base ───────────────────────────────────────────────────────────
+
+model KnowledgeEntry {
+  id        String        @id @default(cuid())
+  title     String
+  content   String        @db.Text
+  category  EntryCategory
+  clientId  String?
+  projectId String?
+  authorId  String?
+  tags      String[]
+  pinned    Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  client  Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author  User?    @relation("entryAuthor", fields: [authorId], references: [id])
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([authorId])
+  @@index([category])
 }
 
-enum ServerStatus {
-  ONLINE
-  DEGRADED
-  OFFLINE
-  MAINTENANCE
-}
+// ─── CRM / Operations ────────────────────────────────────────────────────────
 
 model Credential {
   id          String         @id @default(cuid())
@@ -256,26 +366,6 @@ model ContactPerson {
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([clientId])
-}
-
-model Note {
-  id        String   @id @default(cuid())
-  clientId  String?
-  projectId String?
-  authorId  String
-  type      NoteType @default(INTERNAL)
-  title     String
-  content   String   @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  client  Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  author  User     @relation("noteAuthor", fields: [authorId], references: [id])
-
-  @@index([clientId])
-  @@index([projectId])
-  @@index([authorId])
 }
 
 model ServerEntry {

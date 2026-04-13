@@ -80,3 +80,9 @@ npm run db:seed
 - No NextAuth — native auth for full control
 - Impulses = core UX primitive (Feedback/Change Request/Question/Idea)
 - Flat role model: ADMIN | CLIENT
+
+## Collab Status
+- **Last Session:** 2026-04-13 (Gent)
+- **Last Author:** Gent
+- **Phase:** Phase 3 (Admin Dashboard — Sidebar, Dashboard, Projekte-Liste, Aufgaben, Wissen)
+- **Next Action:** Branch `gent/portal-phase-1-2` erstellen + `/dev push`, dann Sidebar-Nav

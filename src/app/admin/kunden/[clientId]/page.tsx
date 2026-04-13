@@ -7,24 +7,8 @@ import { ProjectStatusBadge, CredentialTypeBadge, ServerStatusBadge } from "@/co
 import { AddUserForm } from "./add-user-form";
 import { ContactManager } from "@/components/admin/contact-manager";
 import { NoteList } from "@/components/admin/note-list";
-
-const clientStatusLabels: Record<string, string> = {
-  ACTIVE: "Aktiv",
-  PAUSED: "Pausiert",
-  ENDED: "Beendet",
-};
-
-const clientStatusColors: Record<string, string> = {
-  ACTIVE: "text-green-400 bg-green-400/10 border border-green-400/20",
-  PAUSED: "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20",
-  ENDED: "text-ink-muted bg-dark-300 border border-border",
-};
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+import { clientStageLabels, clientStageColors } from "@/lib/constants";
+import { formatSize } from "@/lib/format";
 
 interface PageProps {
   params: Promise<{ clientId: string }>;
@@ -69,7 +53,7 @@ export default async function KundeDetailPage({ params }: PageProps) {
       where: { clientId },
       orderBy: [{ isPrimary: "desc" }, { name: "asc" }],
     }),
-    prisma.note.findMany({
+    prisma.knowledgeEntry.findMany({
       where: { clientId },
       include: { author: { select: { id: true, name: true } } },
       orderBy: { createdAt: "desc" },
@@ -141,9 +125,9 @@ export default async function KundeDetailPage({ params }: PageProps) {
             {client.name}
           </h1>
           <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${clientStatusColors[client.status] ?? "text-ink-muted bg-dark-300"}`}
+            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${clientStageColors[client.stage] ?? "text-ink-muted bg-dark-300"}`}
           >
-            {clientStatusLabels[client.status] ?? client.status}
+            {clientStageLabels[client.stage] ?? client.stage}
           </span>
         </div>
         <Link

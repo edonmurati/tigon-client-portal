@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { ImpulseStatus, ImpulseType, CredentialType, ServerStatus, NoteType } from "@/generated/prisma";
+import type { ImpulseStatus, ImpulseType, CredentialType, ServerStatus, EntryCategory } from "@/generated/prisma";
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -124,22 +124,40 @@ export function ServerStatusBadge({ status }: { status: ServerStatus }) {
   );
 }
 
-const noteTypeColors: Record<NoteType, string> = {
-  MEETING: "bg-purple-500/20 text-purple-400",
-  CALL: "bg-blue-500/20 text-blue-400",
-  EMAIL: "bg-yellow-500/20 text-yellow-400",
-  INTERNAL: "bg-dark-300 text-ink-muted",
+const entryCategoryColors: Record<EntryCategory, string> = {
+  CHANGELOG: "bg-blue-500/20 text-blue-400",
+  DECISION: "bg-purple-500/20 text-purple-400",
+  HANDOFF: "bg-orange-500/20 text-orange-400",
+  IDEA: "bg-pink-500/20 text-pink-400",
+  PLAN: "bg-cyan-500/20 text-cyan-400",
+  RESEARCH: "bg-yellow-500/20 text-yellow-400",
+  SPEC: "bg-indigo-500/20 text-indigo-400",
+  PLAYBOOK: "bg-green-500/20 text-green-400",
+  SOP: "bg-emerald-500/20 text-emerald-400",
+  MEETING_NOTE: "bg-purple-500/20 text-purple-400",
+  INSIGHT: "bg-accent/20 text-accent",
+  JOURNAL: "bg-dark-300 text-ink-muted",
+  OTHER: "bg-dark-300 text-ink-muted",
 };
 
-const noteTypeLabels: Record<NoteType, string> = {
-  MEETING: "Meeting",
-  CALL: "Anruf",
-  EMAIL: "E-Mail",
-  INTERNAL: "Intern",
+const entryCategoryLabels: Record<EntryCategory, string> = {
+  CHANGELOG: "Changelog",
+  DECISION: "Entscheidung",
+  HANDOFF: "Handoff",
+  IDEA: "Idee",
+  PLAN: "Plan",
+  RESEARCH: "Research",
+  SPEC: "Spec",
+  PLAYBOOK: "Playbook",
+  SOP: "SOP",
+  MEETING_NOTE: "Meeting",
+  INSIGHT: "Insight",
+  JOURNAL: "Journal",
+  OTHER: "Sonstige",
 };
 
-export function NoteTypeBadge({ type }: { type: NoteType }) {
+export function EntryCategoryBadge({ category }: { category: EntryCategory }) {
   return (
-    <Badge className={noteTypeColors[type]}>{noteTypeLabels[type]}</Badge>
+    <Badge className={entryCategoryColors[category]}>{entryCategoryLabels[category]}</Badge>
   );
 }

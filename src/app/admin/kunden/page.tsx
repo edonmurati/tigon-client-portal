@@ -4,18 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-
-const clientStatusLabels: Record<string, string> = {
-  ACTIVE: "Aktiv",
-  PAUSED: "Pausiert",
-  ENDED: "Beendet",
-};
-
-const clientStatusColors: Record<string, string> = {
-  ACTIVE: "text-green-400 bg-green-400/10 border border-green-400/20",
-  PAUSED: "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20",
-  ENDED: "text-ink-muted bg-dark-300 border border-border",
-};
+import { clientStageLabels, clientStageColors } from "@/lib/constants";
 
 export default async function KundenPage() {
   const user = await getAuthUser();
@@ -97,7 +86,7 @@ export default async function KundenPage() {
               Impulse
             </span>
             <span className="text-[10px] font-medium text-ink-muted uppercase tracking-widest min-w-[80px]">
-              Status
+              Stage
             </span>
           </div>
 
@@ -133,9 +122,9 @@ export default async function KundenPage() {
                 </div>
                 <div className="min-w-[80px]">
                   <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${clientStatusColors[client.status] ?? "text-ink-muted bg-dark-300"}`}
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${clientStageColors[client.stage] ?? "text-ink-muted bg-dark-300"}`}
                   >
-                    {clientStatusLabels[client.status] ?? client.status}
+                    {clientStageLabels[client.stage] ?? client.stage}
                   </span>
                 </div>
               </Link>
