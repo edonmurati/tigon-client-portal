@@ -11,3 +11,10 @@
 - Neue Libs: `src/lib/api.ts`, `src/lib/constants.ts`, `src/lib/format.ts`, `src/lib/validations/`
 - Phase 3: Sidebar erweitert (Dashboard/Aufgaben/Wissen), Server-side Admin-Dashboard mit Stats, Aufgaben-System (Task-API + Board mit Filter/Inline-Create/optimistic Toggle), Wissen-Page (Filter, Suche, Inline-CRUD)
 - Wissen-Polish: Markdown-Rendering (react-markdown + GFM), Tag-Chips mit Autocomplete + URL-Filter, Pin-Toggle/Quick-Action + Sort pinned-first, Write/Preview-Tabs im Editor, neuer Endpoint `/api/admin/notizen/tags`, Notizen-API über Zod-Schemas validiert
+- Task-Detail/Edit-Page unter `/admin/aufgaben/[taskId]`: GET-Endpoint für einzelne Task, Server-Component lädt Task/Clients/Projekte/Admins parallel, Client-Form mit Priority/Assignee/Client→Project-Filter/Due/Completed + Delete
+- Aufgaben-Board Titel linkt jetzt zur Detail-Page
+- Lint-Fix `tag-input.tsx`: setState-in-effect Anti-Pattern durch Render-time state replacement ersetzt
+- Eslint-Config: `src/generated/**` ignoriert (Prisma 7 Generated Code Noise)
+- next.config: `allowedDevOrigins: ["habit"]` für Server-Remote-Dev via Tailscale
+- docker-entrypoint: `prisma db push` → `prisma migrate deploy`
+- Prisma schema: explizit `url = env("DATABASE_URL")` in datasource
