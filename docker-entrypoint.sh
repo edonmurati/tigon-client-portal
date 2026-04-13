@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-echo "Running Prisma db push..."
-node node_modules/prisma/build/index.js db push 2>&1 || echo "Warning: prisma db push failed, continuing anyway"
+echo "Running Prisma migrate deploy..."
+node node_modules/prisma/build/index.js migrate deploy 2>&1 || echo "Warning: prisma migrate deploy failed, continuing anyway"
 
 # One-time seed (remove after first deploy)
 if [ "$RUN_SEED" = "true" ]; then
