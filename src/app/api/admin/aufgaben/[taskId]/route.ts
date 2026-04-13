@@ -11,6 +11,28 @@ import {
 } from "@/lib/api";
 import { updateTaskSchema } from "@/lib/validations/task";
 
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ taskId: string }> }
+) {
+  const auth = await requireAdmin();
+  if (isUnauthorized(auth)) return auth;
+
+  const { taskId } = await params;
+
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: {
+      assignee: { select: { id: true, name: true, email: true } },
+      client: { select: { id: true, name: true, stage: true } },
+      project: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!task) return apiError("Aufgabe nicht gefunden", 404);
+  return apiSuccess({ task });
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ taskId: string }> }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Plus, Trash2, CheckCircle2, Circle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -292,13 +293,14 @@ export function AufgabenBoard({
                   )}
                 </button>
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-medium ${
+                  <Link
+                    href={`/admin/aufgaben/${task.id}`}
+                    className={`text-sm font-medium hover:text-accent transition-colors ${
                       isDone ? "text-ink-muted line-through" : "text-surface"
                     }`}
                   >
                     {task.title}
-                  </p>
+                  </Link>
                   {task.description && (
                     <p className="text-xs text-ink-muted mt-0.5 line-clamp-2">
                       {task.description}
