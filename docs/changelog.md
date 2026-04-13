@@ -9,3 +9,5 @@
 - UI Badge: `NoteTypeBadge` → `EntryCategoryBadge` mit 13 Kategorien-Labels + Farben
 - Bugfix: Projekt-Detail/Edit-Pages rendern jetzt ohne Kunden (nullable handling)
 - Neue Libs: `src/lib/api.ts`, `src/lib/constants.ts`, `src/lib/format.ts`, `src/lib/validations/`
+- Phase 3: Sidebar erweitert (Dashboard/Aufgaben/Wissen), Server-side Admin-Dashboard mit Stats, Aufgaben-System (Task-API + Board mit Filter/Inline-Create/optimistic Toggle), Wissen-Page (Filter, Suche, Inline-CRUD)
+- Wissen-Polish: Markdown-Rendering (react-markdown + GFM), Tag-Chips mit Autocomplete + URL-Filter, Pin-Toggle/Quick-Action + Sort pinned-first, Write/Preview-Tabs im Editor, neuer Endpoint `/api/admin/notizen/tags`, Notizen-API über Zod-Schemas validiert
