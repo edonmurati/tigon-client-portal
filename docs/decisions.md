@@ -7,3 +7,11 @@
 ## 2026-04-13: `Project.clientId` nullable
 **Warum:** Portal muss auch PRODUCT- und INTERNAL-Projekte tragen (eigene Tigon-Produkte, interne Tools) — die haben keinen Kunden.
 **Alternativen:** Dummy-"Tigon"-Client anlegen — verworfen, verschmutzt Kundenliste.
+
+## 2026-04-13: Migrations statt db:push, auch im Container
+**Warum:** Vor Production muss der Schema-Pfad deterministisch sein. `db push` kann Daten verlieren bei Non-Additive Changes und hat keine History. `migrate deploy` mit commited Migration-Files ist reproduzierbar und rollback-faehig.
+**Alternativen:** `db push` beibehalten bis vor Production — verworfen, weil Staging dann strukturell anders als Production setup ist und wir Migration-Kompatibilitaet nicht testen.
+
+## 2026-04-13: Env-File-Struktur via `.env.local` + Symlink
+**Warum:** Der `/dev` Skill erwartet `.env.local`/`.env.staging`/`.env.production` Naming. Prisma CLI liest `.env` standardmaessig — Symlink `.env -> .env.local` sorgt dafuer dass CLI und Next.js aus derselben Quelle lesen.
+**Alternativen:** dotenv-cli als Wrapper — verworfen, ist nicht ueberall installiert (siehe /dev Guardrail 8).

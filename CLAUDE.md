@@ -104,5 +104,5 @@ arbeits-branch (lokal) ──/dev push──→ dev (Coolify Staging) ──/dev
 ## Collab Status
 - **Last Session:** 2026-04-13 (Gent)
 - **Last Author:** Gent
-- **Phase:** Dev-Workflow eingerichtet (env-files restrukturiert, Coolify Staging trackt `dev`, docker-entrypoint nutzt migrate deploy)
-- **Next Action:** Browser-Test Task-Detail/Edit-Page auf Staging nach naechstem `/dev push`; danach Quick-Create-Modal / DnD Sort / Client-Dashboard (handoff.md)
+- **Phase:** Dev-Workflow eingerichtet (env-files restrukturiert, Coolify Staging trackt `dev`, docker-entrypoint nutzt migrate deploy), Task-Detail/Edit-Page gemerged
+- **Next Action:** Staging-Deploy verifizieren (erster migrate-deploy statt db-push — Baseline ggf. noetig), dann Task-Detail im Browser testen
