@@ -27,7 +27,7 @@ interface ServerCardServer {
 interface ServerCardProps {
   server: ServerCardServer;
   clients: { id: string; name: string }[];
-  projects: { id: string; name: string; clientId: string }[];
+  projects: { id: string; name: string; clientId: string | null }[];
   onUpdate?: () => void;
   onDelete?: () => void;
 }

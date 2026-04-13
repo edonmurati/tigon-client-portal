@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { ClientStatus } from "@/generated/prisma";
+import type { ClientStage } from "@/generated/prisma";
 
-const validStatuses: ClientStatus[] = ["ACTIVE", "PAUSED", "ENDED"];
+const validStages: ClientStage[] = [
+  "COLD",
+  "WARM",
+  "ACTIVE",
+  "PRO_BONO",
+  "PAUSED",
+  "ENDED",
+];
 
 export async function GET(
   _req: NextRequest,
@@ -56,8 +63,8 @@ export async function PATCH(
   let body: {
     name?: string;
     slug?: string;
-    partnershipScope?: string;
-    status?: ClientStatus;
+    partnershipScope?: string | null;
+    stage?: ClientStage;
   };
 
   try {
@@ -66,8 +73,8 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (body.status && !validStatuses.includes(body.status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  if (body.stage && !validStages.includes(body.stage)) {
+    return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
   }
 
   // Check slug uniqueness if changing
@@ -88,7 +95,7 @@ export async function PATCH(
       ...(body.partnershipScope !== undefined
         ? { partnershipScope: body.partnershipScope?.trim() || null }
         : {}),
-      ...(body.status ? { status: body.status } : {}),
+      ...(body.stage ? { stage: body.stage } : {}),
     },
   });
 

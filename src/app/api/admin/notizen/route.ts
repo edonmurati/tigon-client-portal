@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
-import type { NoteType } from "@/generated/prisma";
+import type { EntryCategory } from "@/generated/prisma";
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser();
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   const clientId = searchParams.get("clientId");
   const projectId = searchParams.get("projectId");
 
-  const notes = await prisma.note.findMany({
+  const entries = await prisma.knowledgeEntry.findMany({
     where: {
       ...(clientId ? { clientId } : {}),
       ...(projectId ? { projectId } : {}),
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ notes });
+  return NextResponse.json({ entries });
 }
 
 export async function POST(req: NextRequest) {
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   let body: {
     clientId?: string;
     projectId?: string;
-    type?: NoteType;
+    category?: EntryCategory;
     title?: string;
     content?: string;
   };
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { clientId, projectId, type, title, content } = body;
+  const { clientId, projectId, category, title, content } = body;
 
   if (!title || typeof title !== "string" || title.trim().length === 0) {
     return NextResponse.json({ error: "Titel ist erforderlich" }, { status: 400 });
@@ -58,22 +58,16 @@ export async function POST(req: NextRequest) {
   if (!content || typeof content !== "string" || content.trim().length === 0) {
     return NextResponse.json({ error: "Inhalt ist erforderlich" }, { status: 400 });
   }
-  if (!type) {
-    return NextResponse.json({ error: "Typ ist erforderlich" }, { status: 400 });
-  }
-  if (!clientId && !projectId) {
-    return NextResponse.json(
-      { error: "clientId oder projectId ist erforderlich" },
-      { status: 400 }
-    );
+  if (!category) {
+    return NextResponse.json({ error: "Kategorie ist erforderlich" }, { status: 400 });
   }
 
-  const note = await prisma.note.create({
+  const entry = await prisma.knowledgeEntry.create({
     data: {
       clientId: clientId ?? null,
       projectId: projectId ?? null,
       authorId: user.id,
-      type,
+      category,
       title: title.trim(),
       content: content.trim(),
     },
@@ -87,11 +81,11 @@ export async function POST(req: NextRequest) {
   logActivity({
     userId: user.id,
     action: "CREATE",
-    entityType: "Note",
-    entityId: note.id,
+    entityType: "KnowledgeEntry",
+    entityId: entry.id,
     clientId: clientId ?? undefined,
-    meta: { title: note.title, type: note.type },
+    meta: { title: entry.title, category: entry.category },
   });
 
-  return NextResponse.json({ note }, { status: 201 });
+  return NextResponse.json({ entry }, { status: 201 });
 }

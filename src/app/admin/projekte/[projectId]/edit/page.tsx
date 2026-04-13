@@ -44,7 +44,7 @@ export default async function EditProjektPage({ params }: PageProps) {
           Projekt bearbeiten
         </h1>
         <p className="text-ink-muted text-sm mt-1">
-          {project.name} &bull; {project.client.name}
+          {project.name}{project.client ? ` • ${project.client.name}` : ""}
         </p>
       </div>
 

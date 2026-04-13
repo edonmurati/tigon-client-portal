@@ -41,7 +41,7 @@ async function main() {
   console.log(`  Admin: ${edon.name} (${edon.email})`);
   console.log(`  Admin: ${gent.name} (${gent.email})`);
 
-  // ─── Client: Fachwelt Verlag ───────────────────────────────────────────────
+  // ─── Client: Fachwelt Verlag (ACTIVE) ─────────────────────────────────────
 
   const clientPassword = await hash("client123", 12);
 
@@ -51,7 +51,11 @@ async function main() {
     create: {
       name: "Fachwelt Verlag",
       slug: "fachwelt",
-      status: "ACTIVE",
+      stage: "ACTIVE",
+      industry: "Verlagswesen",
+      website: "https://fachwelt-verlag.de",
+      monthlyRevenueCents: 500000,
+      contractType: "Festpreis",
       partnershipScope:
         "B2B Marktplatz-Entwicklung, Redaktionsassistent, WebMag-Integration",
     },
@@ -70,9 +74,10 @@ async function main() {
   });
 
   console.log(
-    `  Client: ${fachwelt.name} — User: ${alija.name} (${alija.email})`
+    `  Client: ${fachwelt.name} (ACTIVE) — User: ${alija.name} (${alija.email})`
   );
 
+  // Fachwelt Marketplace Project
   const fachweltProject = await prisma.project.upsert({
     where: { id: "proj_fachwelt_marketplace" },
     update: {},
@@ -83,12 +88,19 @@ async function main() {
       description:
         "B2B Industrie-Marktplatz für Fachwelt Verlag — Phase 1: MVP, Phase 2: AI-Features",
       status: "ACTIVE",
+      type: "CLIENT_PROJECT",
+      health: "AMBER",
       startDate: new Date("2025-11-01"),
+      repoUrl: "edonmurati/fachwelt-marketplace",
+      prodUrl: "https://marketplace.fachwelt-verlag.de",
+      stagingUrl: "https://staging.fachwelt-verlag.de",
+      stack: ["Next.js", "TypeScript", "Prisma", "PostgreSQL", "MinIO"],
+      phase: "Feature Dev",
     },
   });
 
   // Project Areas
-  const [areaMarketplace, , ] = await Promise.all([
+  const [areaMarketplace, ,] = await Promise.all([
     prisma.projectArea.create({
       data: {
         projectId: fachweltProject.id,
@@ -159,7 +171,7 @@ async function main() {
 
   console.log(`  Project: ${fachweltProject.name}`);
 
-  // ─── Client: Horbach ──────────────────────────────────────────────────────
+  // ─── Client: Horbach (ACTIVE) ─────────────────────────────────────────────
 
   const horbach = await prisma.client.upsert({
     where: { slug: "horbach" },
@@ -167,7 +179,11 @@ async function main() {
     create: {
       name: "Horbach",
       slug: "horbach",
-      status: "ACTIVE",
+      stage: "ACTIVE",
+      industry: "Finanzberatung",
+      website: "https://horbach.de",
+      monthlyRevenueCents: 300000,
+      contractType: "Retainer",
       partnershipScope:
         "HubSpot Automatisierung, E-Mail Workflows, Lead Routing für 350 Berater",
     },
@@ -186,7 +202,7 @@ async function main() {
   });
 
   console.log(
-    `  Client: ${horbach.name} — User: ${marlon.name} (${marlon.email})`
+    `  Client: ${horbach.name} (ACTIVE) — User: ${marlon.name} (${marlon.email})`
   );
 
   const horbachProject = await prisma.project.upsert({
@@ -199,7 +215,12 @@ async function main() {
       description:
         "Umfassende Automatisierungslösung für 350 Horbach-Berater — HubSpot, E-Mail, Lead Routing",
       status: "ACTIVE",
+      type: "CLIENT_PROJECT",
+      health: "GREEN",
       startDate: new Date("2026-04-01"),
+      repoUrl: "edonmurati/horbach-automation",
+      stack: ["n8n", "HubSpot API", "TypeScript"],
+      phase: "Setup",
     },
   });
 
@@ -229,7 +250,87 @@ async function main() {
 
   console.log(`  Project: ${horbachProject.name}`);
 
-  // ─── V2: Contact Persons ──────────────────────────────────────────────────
+  // ─── Client: ImmoAI (WARM — Pipeline) ────────────────────────────────────
+
+  const immoai = await prisma.client.upsert({
+    where: { slug: "immoai" },
+    update: {},
+    create: {
+      name: "ImmoAI",
+      slug: "immoai",
+      stage: "WARM",
+      industry: "Immobilien / PropTech",
+      partnershipScope: "KI-Exposé-Generator, Immobilien-Datenanalyse",
+    },
+  });
+
+  console.log(`  Client: ${immoai.name} (WARM)`);
+
+  // ─── Product: BauBeleg ────────────────────────────────────────────────────
+
+  const baubeleg = await prisma.project.upsert({
+    where: { id: "proj_baubeleg" },
+    update: {},
+    create: {
+      id: "proj_baubeleg",
+      name: "BauBeleg",
+      description:
+        "Digitale Bautagebuch-App für Handwerker — Foto-Dokumentation, Aufmaße, Nachträge",
+      status: "ACTIVE",
+      type: "PRODUCT",
+      health: "GREEN",
+      startDate: new Date("2025-09-01"),
+      repoUrl: "edonmurati/baubeleg-app",
+      prodUrl: "https://baubeleg.tigon-automation.de",
+      stack: ["Next.js", "TypeScript", "Prisma", "PostgreSQL", "MinIO"],
+      phase: "Feature Dev",
+    },
+  });
+
+  console.log(`  Product: ${baubeleg.name}`);
+
+  // ─── Product: Nachtrag ────────────────────────────────────────────────────
+
+  const nachtrag = await prisma.project.upsert({
+    where: { id: "proj_nachtrag" },
+    update: {},
+    create: {
+      id: "proj_nachtrag",
+      name: "Nachtrag",
+      description:
+        "Automatisierte Nachtragsberechnung für Bauunternehmen — VOB-konform",
+      status: "PAUSED",
+      type: "PRODUCT",
+      health: "AMBER",
+      repoUrl: "edonmurati/nachtrag",
+      stack: ["Next.js", "TypeScript"],
+      phase: "Research",
+    },
+  });
+
+  console.log(`  Product: ${nachtrag.name}`);
+
+  // ─── Internal: Tigon Portal ───────────────────────────────────────────────
+
+  const tigonPortal = await prisma.project.upsert({
+    where: { id: "proj_tigon_portal" },
+    update: {},
+    create: {
+      id: "proj_tigon_portal",
+      name: "Tigon Client Portal",
+      description: "Internes Admin-Dashboard + Kunden-Portal",
+      status: "ACTIVE",
+      type: "INTERNAL",
+      health: "GREEN",
+      repoUrl: "edonmurati/tigon-client-portal",
+      stack: ["Next.js", "TypeScript", "Prisma", "PostgreSQL", "Tailwind"],
+      phase: "Rebuild",
+    },
+  });
+
+  console.log(`  Internal: ${tigonPortal.name}`);
+
+  // ─── Contact Persons ──────────────────────────────────────────────────────
 
   await prisma.contactPerson.createMany({
     data: [
@@ -247,11 +348,6 @@ async function main() {
         role: "Redaktionsleiterin",
         email: "ms@fachwelt-verlag.de",
       },
-    ],
-  });
-
-  await prisma.contactPerson.createMany({
-    data: [
       {
         clientId: horbach.id,
         name: "Marlon Horbach",
@@ -265,41 +361,146 @@ async function main() {
 
   console.log("  ContactPersons: Fachwelt (2), Horbach (1)");
 
-  // ─── V2: Notes ────────────────────────────────────────────────────────────
+  // ─── Knowledge Entries (replace old Notes) ────────────────────────────────
 
-  await prisma.note.createMany({
+  await prisma.knowledgeEntry.createMany({
     data: [
+      // Meeting notes (was: Note type MEETING/CALL)
       {
         clientId: fachwelt.id,
         authorId: edon.id,
-        type: "MEETING",
+        category: "MEETING_NOTE",
         title: "Kickoff-Meeting Marketplace",
         content:
           "Scope besprochen: Marketplace mit Bildsuche, semantischer Suche. Phase 1 live bis Ende Mai.",
-      },
-      {
-        clientId: fachwelt.id,
-        projectId: fachweltProject.id,
-        authorId: edon.id,
-        type: "INTERNAL",
-        title: "Bildsuche-Recherche",
-        content:
-          "CLIP + pgvector Ansatz vielversprechend. 14x Hormozi Score. Muss als USP positioniert werden.",
+        tags: ["kickoff", "scope"],
       },
       {
         clientId: horbach.id,
         authorId: gent.id,
-        type: "CALL",
+        category: "MEETING_NOTE",
         title: "Demo-Call Vorbereitung",
         content:
           "Marlon will n8n-Prototypen sehen. 3-5 Tage Aufwand für Demo.",
+        tags: ["demo", "n8n"],
+      },
+      // Research (was: Note type INTERNAL)
+      {
+        clientId: fachwelt.id,
+        projectId: fachweltProject.id,
+        authorId: edon.id,
+        category: "RESEARCH",
+        title: "Bildsuche-Recherche",
+        content:
+          "CLIP + pgvector Ansatz vielversprechend. 14x Hormozi Score. Muss als USP positioniert werden.",
+        tags: ["clip", "pgvector", "ai", "bildsuche"],
+      },
+      // Decisions (company level)
+      {
+        authorId: gent.id,
+        category: "DECISION",
+        title: "Self-Hosted Stack statt BaaS",
+        content:
+          "Entscheidung: Kein Supabase, kein Firebase. PostgreSQL + Prisma + MinIO self-hosted auf Hetzner VPS via Coolify. Grund: Volle Kontrolle, DSGVO, keine Vendor-Lock-In.",
+        tags: ["architektur", "infrastruktur"],
+        pinned: true,
+      },
+      // Playbook
+      {
+        authorId: edon.id,
+        category: "PLAYBOOK",
+        title: "Web-Projekt Setup Checklist",
+        content:
+          "1. GitHub Repo (private, edonmurati/)\n2. CLAUDE.md + docs/ Struktur\n3. Next.js + TypeScript + Tailwind\n4. Prisma + PostgreSQL\n5. Coolify Deployment\n6. .env für Credentials\n7. Feature Branch Workflow",
+        tags: ["setup", "checklist", "web"],
+        pinned: true,
+      },
+      // Insight
+      {
+        authorId: gent.id,
+        category: "INSIGHT",
+        title: "KI-Assistenten als Wettbewerbsvorteil für KMUs",
+        content:
+          "Deutsche KMUs sind unterversorgt bei KI-Integration. Große Beratungen sind zu teuer, SaaS-Tools zu generisch. Unsere Nische: maßgeschneiderte KI-Lösungen mit persönlicher Betreuung.",
+        tags: ["strategie", "markt", "ki"],
+      },
+      // Project changelog
+      {
+        projectId: baubeleg.id,
+        authorId: edon.id,
+        category: "CHANGELOG",
+        title: "Supabase → Self-Hosted Migration",
+        content:
+          "Komplette Migration von Supabase auf Self-Hosted Stack:\n- PostgreSQL Container\n- MinIO für Datei-Storage\n- Auth via bcryptjs + jose\n- Nur Resend (E-Mail) noch offen",
+        tags: ["migration", "infrastruktur"],
       },
     ],
   });
 
-  console.log("  Notes: Fachwelt (2), Horbach (1)");
+  console.log("  KnowledgeEntries: 7 entries");
 
-  // ─── V2: Credentials (encrypted) ─────────────────────────────────────────
+  // ─── Tasks ────────────────────────────────────────────────────────────────
+
+  await prisma.task.createMany({
+    data: [
+      {
+        title: "Staging-URL an Fachwelt schicken",
+        clientId: fachwelt.id,
+        projectId: fachweltProject.id,
+        assigneeId: gent.id,
+        priority: "HIGH",
+        dueDate: new Date("2026-04-14"),
+        sortOrder: 0,
+      },
+      {
+        title: "BauBeleg Permission-Cleanup",
+        projectId: baubeleg.id,
+        assigneeId: edon.id,
+        priority: "HIGH",
+        dueDate: new Date("2026-04-14"),
+        sortOrder: 1,
+      },
+      {
+        title: "HubSpot API-Key beantragen",
+        clientId: horbach.id,
+        projectId: horbachProject.id,
+        assigneeId: gent.id,
+        priority: "NORMAL",
+        sortOrder: 2,
+      },
+      {
+        title: "Resend E-Mail-Integration für BauBeleg",
+        projectId: baubeleg.id,
+        assigneeId: edon.id,
+        priority: "NORMAL",
+        description: "Letzte offene Komponente nach Supabase-Migration",
+        sortOrder: 3,
+      },
+      {
+        title: "ImmoAI Research abschließen",
+        clientId: immoai.id,
+        assigneeId: edon.id,
+        priority: "LOW",
+        description:
+          "Marktanalyse + Wettbewerb, Entscheidung ob wir es bauen",
+        sortOrder: 4,
+      },
+      {
+        title: "Demo-Prototyp für Horbach",
+        clientId: horbach.id,
+        projectId: horbachProject.id,
+        assigneeId: gent.id,
+        priority: "NORMAL",
+        description: "n8n Workflow Prototypen: 3-5 Tage Aufwand",
+        dueDate: new Date("2026-04-20"),
+        sortOrder: 5,
+      },
+    ],
+  });
+
+  console.log("  Tasks: 6 entries");
+
+  // ─── Credentials (encrypted) ─────────────────────────────────────────────
 
   const coolifyLogin = encrypt("super-secret-password-123");
   const coolifyCredential = await prisma.credential.create({
@@ -347,7 +548,7 @@ async function main() {
 
   console.log("  Credentials: Fachwelt (2), Horbach (1)");
 
-  // ─── V2: Server Entries ───────────────────────────────────────────────────
+  // ─── Server Entries ───────────────────────────────────────────────────────
 
   const fachweltProdServer = await prisma.serverEntry.create({
     data: {
@@ -384,7 +585,7 @@ async function main() {
 
   console.log("  ServerEntries: Fachwelt (2), Horbach (1)");
 
-  // ─── V2: Activity Log ─────────────────────────────────────────────────────
+  // ─── Activity Log ─────────────────────────────────────────────────────────
 
   await prisma.activityLog.createMany({
     data: [
@@ -398,8 +599,8 @@ async function main() {
       },
       {
         userId: gent.id,
-        action: "note.create",
-        entityType: "Note",
+        action: "entry.create",
+        entityType: "KnowledgeEntry",
         entityId: "seed",
         clientId: horbach.id,
         meta: JSON.stringify({ title: "Demo-Call Vorbereitung" }),
@@ -426,8 +627,12 @@ async function main() {
   console.log("  ActivityLog: 4 entries");
 
   console.log("\nSeed complete!");
-  console.log("  Admins: edon@tigonautomation.de / gent@tigonautomation.de (admin123)");
-  console.log("  Clients: ap@fachwelt-verlag.de / marlon@horbach.de (client123)");
+  console.log(
+    "  Admins: edon@tigonautomation.de / gent@tigonautomation.de (admin123)"
+  );
+  console.log(
+    "  Clients: ap@fachwelt-verlag.de / marlon@horbach.de (client123)"
+  );
 }
 
 main()

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { ClientStatus } from "@/generated/prisma";
+import type { ClientStage } from "@/generated/prisma";
 
 interface ClientFormProps {
   mode: "create" | "edit";
@@ -16,7 +16,7 @@ interface ClientFormProps {
     name?: string;
     slug?: string;
     partnershipScope?: string;
-    status?: ClientStatus;
+    stage?: ClientStage;
   };
 }
 
@@ -27,8 +27,11 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-const statusOptions = [
+const stageOptions = [
+  { value: "COLD", label: "Cold" },
+  { value: "WARM", label: "Warm" },
   { value: "ACTIVE", label: "Aktiv" },
+  { value: "PRO_BONO", label: "Pro Bono" },
   { value: "PAUSED", label: "Pausiert" },
   { value: "ENDED", label: "Beendet" },
 ];
@@ -42,8 +45,8 @@ export function ClientForm({ mode, clientId, initialData }: ClientFormProps) {
   const [partnershipScope, setPartnershipScope] = useState(
     initialData?.partnershipScope ?? ""
   );
-  const [status, setStatus] = useState<ClientStatus>(
-    initialData?.status ?? "ACTIVE"
+  const [stage, setStage] = useState<ClientStage>(
+    initialData?.stage ?? "WARM"
   );
 
   // First user fields (create only)
@@ -97,7 +100,7 @@ export function ClientForm({ mode, clientId, initialData }: ClientFormProps) {
             name: name.trim(),
             slug: slug.trim(),
             partnershipScope: partnershipScope.trim() || null,
-            status,
+            stage,
           }),
         });
         const data = await res.json();
@@ -209,10 +212,10 @@ export function ClientForm({ mode, clientId, initialData }: ClientFormProps) {
 
         {mode === "edit" && (
           <Select
-            label="Status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as ClientStatus)}
-            options={statusOptions}
+            label="Stage"
+            value={stage}
+            onChange={(e) => setStage(e.target.value as ClientStage)}
+            options={stageOptions}
           />
         )}
       </div>

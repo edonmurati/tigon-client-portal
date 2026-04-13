@@ -128,7 +128,7 @@ export default async function ImpulseInboxPage({ searchParams }: PageProps) {
                     {impulse.title}
                   </p>
                   <p className="text-xs text-ink-muted mt-0.5 truncate">
-                    {impulse.project.client.name} &bull; {impulse.project.name} &bull;{" "}
+                    {impulse.project.client?.name ?? "—"} &bull; {impulse.project.name} &bull;{" "}
                     {impulse.author.name}
                   </p>
                 </div>

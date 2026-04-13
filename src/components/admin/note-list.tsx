@@ -4,48 +4,48 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, Edit, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NoteTypeBadge } from "@/components/ui/badge";
+import { EntryCategoryBadge } from "@/components/ui/badge";
 import { NoteEditor } from "@/components/admin/note-editor";
 import { timeAgo } from "@/lib/time";
-import type { NoteType } from "@/generated/prisma";
+import type { EntryCategory } from "@/generated/prisma";
 
-interface NoteItem {
+interface EntryItem {
   id: string;
-  type: NoteType;
+  category: EntryCategory;
   title: string;
   content: string;
-  author: { name: string };
+  author: { name: string } | null;
   createdAt: string | Date;
   updatedAt: string | Date;
 }
 
 interface NoteListProps {
-  notes: NoteItem[];
+  notes: EntryItem[];
   clientId?: string;
   projectId?: string;
 }
 
 export function NoteList({ notes: initialNotes, clientId, projectId }: NoteListProps) {
   const router = useRouter();
-  const [notes, setNotes] = useState<NoteItem[]>(initialNotes);
+  const [notes, setNotes] = useState<EntryItem[]>(initialNotes);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showNewForm, setShowNewForm] = useState(false);
 
-  async function handleDelete(noteId: string) {
+  async function handleDelete(entryId: string) {
     if (deletingId) return;
-    if (!confirm("Notiz wirklich löschen?")) return;
+    if (!confirm("Eintrag wirklich löschen?")) return;
 
-    setDeletingId(noteId);
+    setDeletingId(entryId);
     try {
-      const res = await fetch(`/api/admin/notizen/${noteId}`, {
+      const res = await fetch(`/api/admin/notizen/${entryId}`, {
         method: "DELETE",
         credentials: "include",
       });
       if (res.ok) {
-        setNotes((prev) => prev.filter((n) => n.id !== noteId));
-        if (expandedId === noteId) setExpandedId(null);
+        setNotes((prev) => prev.filter((n) => n.id !== entryId));
+        if (expandedId === entryId) setExpandedId(null);
       }
     } finally {
       setDeletingId(null);
@@ -67,7 +67,7 @@ export function NoteList({ notes: initialNotes, clientId, projectId }: NoteListP
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-ink-muted uppercase tracking-wider">
-          {notes.length} {notes.length === 1 ? "Notiz" : "Notizen"}
+          {notes.length} {notes.length === 1 ? "Eintrag" : "Einträge"}
         </span>
         <Button
           size="sm"
@@ -75,11 +75,11 @@ export function NoteList({ notes: initialNotes, clientId, projectId }: NoteListP
           onClick={() => setShowNewForm((v) => !v)}
         >
           <Plus size={14} />
-          Neue Notiz
+          Neuer Eintrag
         </Button>
       </div>
 
-      {/* New note form */}
+      {/* New entry form */}
       {showNewForm && (
         <NoteEditor
           clientId={clientId}
@@ -89,9 +89,9 @@ export function NoteList({ notes: initialNotes, clientId, projectId }: NoteListP
         />
       )}
 
-      {/* Notes list */}
+      {/* Entries list */}
       {notes.length === 0 && !showNewForm && (
-        <p className="text-sm text-ink-muted py-4 text-center">Noch keine Notizen</p>
+        <p className="text-sm text-ink-muted py-4 text-center">Noch keine Einträge</p>
       )}
 
       {notes.map((note) => (
@@ -99,18 +99,18 @@ export function NoteList({ notes: initialNotes, clientId, projectId }: NoteListP
           key={note.id}
           className="bg-dark-200 border border-border rounded-xl overflow-hidden"
         >
-          {/* Note header */}
+          {/* Entry header */}
           <div
             className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-dark-300/50 transition-colors"
             onClick={() =>
               setExpandedId((prev) => (prev === note.id ? null : note.id))
             }
           >
-            <NoteTypeBadge type={note.type} />
+            <EntryCategoryBadge category={note.category} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-surface truncate">{note.title}</p>
               <p className="text-xs text-ink-muted">
-                {note.author.name} · {timeAgo(note.createdAt)}
+                {note.author?.name ?? "—"} · {timeAgo(note.createdAt)}
               </p>
             </div>
             <div className="flex items-center gap-1 shrink-0">

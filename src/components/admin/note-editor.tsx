@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
-import type { NoteType } from "@/generated/prisma";
+import type { EntryCategory } from "@/generated/prisma";
 
-interface ExistingNote {
+interface ExistingEntry {
   id: string;
-  type: NoteType;
+  category: EntryCategory;
   title: string;
   content: string;
 }
@@ -18,16 +18,25 @@ interface ExistingNote {
 interface NoteEditorProps {
   clientId?: string;
   projectId?: string;
-  note?: ExistingNote;
+  note?: ExistingEntry;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-const NOTE_TYPE_OPTIONS = [
-  { value: "MEETING", label: "Meeting" },
-  { value: "CALL", label: "Anruf" },
-  { value: "EMAIL", label: "E-Mail" },
-  { value: "INTERNAL", label: "Intern" },
+const CATEGORY_OPTIONS = [
+  { value: "MEETING_NOTE", label: "Meeting" },
+  { value: "DECISION", label: "Entscheidung" },
+  { value: "IDEA", label: "Idee" },
+  { value: "RESEARCH", label: "Research" },
+  { value: "HANDOFF", label: "Handoff" },
+  { value: "PLAN", label: "Plan" },
+  { value: "SPEC", label: "Spec" },
+  { value: "CHANGELOG", label: "Changelog" },
+  { value: "PLAYBOOK", label: "Playbook" },
+  { value: "SOP", label: "SOP" },
+  { value: "INSIGHT", label: "Insight" },
+  { value: "JOURNAL", label: "Journal" },
+  { value: "OTHER", label: "Sonstige" },
 ];
 
 export function NoteEditor({
@@ -38,7 +47,9 @@ export function NoteEditor({
   onCancel,
 }: NoteEditorProps) {
   const router = useRouter();
-  const [type, setType] = useState<NoteType>(note?.type ?? "INTERNAL");
+  const [category, setCategory] = useState<EntryCategory>(
+    note?.category ?? "MEETING_NOTE"
+  );
   const [title, setTitle] = useState(note?.title ?? "");
   const [content, setContent] = useState(note?.content ?? "");
   const [submitting, setSubmitting] = useState(false);
@@ -59,9 +70,9 @@ export function NoteEditor({
         : "/api/admin/notizen";
       const method = isEdit ? "PATCH" : "POST";
       const body = isEdit
-        ? { type, title: title.trim(), content: content.trim() }
+        ? { category, title: title.trim(), content: content.trim() }
         : {
-            type,
+            category,
             title: title.trim(),
             content: content.trim(),
             ...(clientId ? { clientId } : {}),
@@ -98,17 +109,17 @@ export function NoteEditor({
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select
-          label="Typ"
-          options={NOTE_TYPE_OPTIONS}
-          value={type}
-          onChange={(e) => setType(e.target.value as NoteType)}
+          label="Kategorie"
+          options={CATEGORY_OPTIONS}
+          value={category}
+          onChange={(e) => setCategory(e.target.value as EntryCategory)}
           disabled={submitting}
         />
         <Input
           label="Titel"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Notiz-Titel..."
+          placeholder="Titel..."
           required
           disabled={submitting}
         />
@@ -117,7 +128,7 @@ export function NoteEditor({
         label="Inhalt"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="Notiz-Inhalt... (Markdown wird unterstützt)"
+        placeholder="Inhalt... (Markdown wird unterstützt)"
         rows={4}
         required
         disabled={submitting}
@@ -141,7 +152,7 @@ export function NoteEditor({
           loading={submitting}
           disabled={!title.trim() || !content.trim()}
         >
-          {isEdit ? "Speichern" : "Notiz erstellen"}
+          {isEdit ? "Speichern" : "Eintrag erstellen"}
         </Button>
       </div>
     </form>

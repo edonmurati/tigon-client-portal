@@ -66,7 +66,7 @@ export default async function ProjectDetailPage({
       </div>
 
       {/* Partnership Scope */}
-      {project.client.partnershipScope && (
+      {project.client?.partnershipScope && (
         <section className="mb-8">
           <h2 className="text-xs font-medium text-ink-muted uppercase tracking-wider mb-3">
             Leistungsumfang

@@ -22,7 +22,7 @@ export default async function EditKundePage({ params }: PageProps) {
       name: true,
       slug: true,
       partnershipScope: true,
-      status: true,
+      stage: true,
     },
   });
 
@@ -54,7 +54,7 @@ export default async function EditKundePage({ params }: PageProps) {
           name: client.name,
           slug: client.slug,
           partnershipScope: client.partnershipScope ?? undefined,
-          status: client.status,
+          stage: client.stage,
         }}
       />
     </div>

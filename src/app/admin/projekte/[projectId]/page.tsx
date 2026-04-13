@@ -67,7 +67,7 @@ export default async function ProjektDetailPage({ params }: PageProps) {
 
   // Fetch V2 CRM data
   const [notes, credentials, documents] = await Promise.all([
-    prisma.note.findMany({
+    prisma.knowledgeEntry.findMany({
       where: { projectId },
       include: { author: { select: { id: true, name: true } } },
       orderBy: { createdAt: "desc" },
@@ -114,13 +114,23 @@ export default async function ProjektDetailPage({ params }: PageProps) {
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
       {/* Back link */}
-      <Link
-        href={`/admin/kunden/${project.client.id}`}
-        className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-surface transition-colors mb-6"
-      >
-        <ArrowLeft size={14} />
-        {project.client.name}
-      </Link>
+      {project.client ? (
+        <Link
+          href={`/admin/kunden/${project.client.id}`}
+          className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-surface transition-colors mb-6"
+        >
+          <ArrowLeft size={14} />
+          {project.client.name}
+        </Link>
+      ) : (
+        <Link
+          href="/admin/projekte"
+          className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-surface transition-colors mb-6"
+        >
+          <ArrowLeft size={14} />
+          Projekte
+        </Link>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-8">
@@ -131,15 +141,17 @@ export default async function ProjektDetailPage({ params }: PageProps) {
             </h1>
             <ProjectStatusBadge status={project.status} />
           </div>
-          <p className="text-ink-muted text-sm">
-            Kunde:{" "}
-            <Link
-              href={`/admin/kunden/${project.client.id}`}
-              className="text-accent hover:text-accent-hover transition-colors"
-            >
-              {project.client.name}
-            </Link>
-          </p>
+          {project.client && (
+            <p className="text-ink-muted text-sm">
+              Kunde:{" "}
+              <Link
+                href={`/admin/kunden/${project.client.id}`}
+                className="text-accent hover:text-accent-hover transition-colors"
+              >
+                {project.client.name}
+              </Link>
+            </p>
+          )}
         </div>
         <Link
           href={`/admin/projekte/${projectId}/edit`}
@@ -221,12 +233,14 @@ export default async function ProjektDetailPage({ params }: PageProps) {
             <h2 className="text-sm font-medium text-surface">
               Impulse ({project.impulses.length})
             </h2>
-            <Link
-              href={`/admin/impulse?clientId=${project.client.id}`}
-              className="text-xs text-ink-muted hover:text-surface transition-colors"
-            >
-              Alle anzeigen →
-            </Link>
+            {project.client && (
+              <Link
+                href={`/admin/impulse?clientId=${project.client.id}`}
+                className="text-xs text-ink-muted hover:text-surface transition-colors"
+              >
+                Alle anzeigen →
+              </Link>
+            )}
           </div>
           <div className="divide-y divide-border">
             {project.impulses.map((impulse) => (

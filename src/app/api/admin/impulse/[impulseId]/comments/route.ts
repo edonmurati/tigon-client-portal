@@ -67,7 +67,7 @@ export async function POST(
       body: JSON.stringify({
         impulseId: impulse.id,
         impulseTitle: impulse.title,
-        clientName: impulse.project.client.name,
+        clientName: impulse.project.client?.name ?? "",
         clientEmail: impulse.author.email,
         responsePreview: content.trim().substring(0, 200),
         portalUrl,

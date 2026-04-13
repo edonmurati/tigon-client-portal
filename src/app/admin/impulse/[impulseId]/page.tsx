@@ -93,6 +93,7 @@ export default async function ImpulseDetailPage({ params }: PageProps) {
 
       {/* Meta info */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {impulse.project.client && (
         <div className="bg-dark-100 border border-border rounded-xl px-4 py-3">
           <p className="text-[10px] text-ink-muted uppercase tracking-wider mb-1">Kunde</p>
           <Link
@@ -102,6 +103,7 @@ export default async function ImpulseDetailPage({ params }: PageProps) {
             {impulse.project.client.name}
           </Link>
         </div>
+        )}
         <div className="bg-dark-100 border border-border rounded-xl px-4 py-3">
           <p className="text-[10px] text-ink-muted uppercase tracking-wider mb-1">Projekt</p>
           <Link
