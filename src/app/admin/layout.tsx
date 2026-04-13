@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut } from "lucide-react";
+import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut, LayoutDashboard, CheckSquare, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { ProtectedRoute } from "@/components/auth/auth-provider";
@@ -11,9 +11,12 @@ import { ProtectedRoute } from "@/components/auth/auth-provider";
 const navSections = [
   {
     items: [
+      { href: "/admin", label: "Dashboard", icon: LayoutDashboard, matchPrefix: "/admin", exact: true },
       { href: "/admin/impulse", label: "Impulse", icon: Bell, matchPrefix: "/admin/impulse" },
+      { href: "/admin/aufgaben", label: "Aufgaben", icon: CheckSquare, matchPrefix: "/admin/aufgaben" },
       { href: "/admin/kunden", label: "Kunden", icon: Users, matchPrefix: "/admin/kunden" },
       { href: "/admin/projekte", label: "Projekte", icon: FolderOpen, matchPrefix: "/admin/projekte" },
+      { href: "/admin/wissen", label: "Wissen", icon: BookOpen, matchPrefix: "/admin/wissen" },
     ],
   },
   {
@@ -76,7 +79,9 @@ function AdminSidebar({
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname.startsWith(item.matchPrefix);
+                const isActive = "exact" in item && item.exact
+                  ? pathname === item.matchPrefix
+                  : pathname.startsWith(item.matchPrefix);
                 return (
                   <Link
                     key={item.href}
