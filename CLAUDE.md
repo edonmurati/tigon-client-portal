@@ -46,26 +46,46 @@ import { PrismaClient, type Role } from "@/generated/prisma";
 
 ## Dev Commands
 ```bash
-npm run dev         # dev server
-npm run db:push     # push schema (no migration file)
-npm run db:migrate  # create + apply migration
+npm run dev         # dev server (bind 0.0.0.0, erreichbar via http://habit:3001)
+npm run db:migrate  # create + apply migration (lokal)
 npm run db:seed     # seed test data
 npm run db:generate # regenerate Prisma client
 npm run db:studio   # Prisma Studio
 ```
 
+NIE `db:push` benutzen — wir tracken Migrations explizit. Schema-Aenderung => `db:migrate`.
+
+## Env Files
+- `.env.local` — Source of Truth fuer lokale Entwicklung (Symlink: `.env -> .env.local`)
+- `.env.staging` — Staging-Secrets (DB-URL nur intern erreichbar, siehe Datei-Header)
+- `.env.example` — committed Template fuer neue Devs
+- `.env.production` — gibt's nicht im Repo, lebt nur in Coolify Web-UI
+
 ## First-Time DB Setup
 ```bash
-createdb tigon_portal
-npm run db:push
-npm run db:generate
+docker run -d --name tigon-portal-postgres \
+  -e POSTGRES_USER=tigon -e POSTGRES_PASSWORD=tigon_dev_2026 -e POSTGRES_DB=tigon_portal \
+  -p 54323:5432 postgres:16-alpine
+cp .env.example .env.local
+ln -sf .env.local .env
+npm install
+npm run db:migrate
 npm run db:seed
 ```
 
+## Dev Workflow (siehe /dev Skill)
+```
+arbeits-branch (lokal) ──/dev push──→ dev (Coolify Staging) ──/dev done──→ main (Coolify Production)
+```
+- Coolify Staging trackt `dev` (geaendert 2026-04-13).
+- Coolify Production trackt `main` (TBD — noch nicht gesetzt).
+- Staging-Container laeuft `prisma migrate deploy` beim Start (docker-entrypoint.sh).
+
 ## Deployment (Coolify)
-- Env: DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET
+- App UUIDs siehe `~/tigon/intern/coolify-credentials.md`
+- Env-Vars in Coolify Web-UI gepflegt (NICHT im Repo)
 - Build: `npm run build`
-- Start: `node .next/standalone/server.js`
+- Start: `sh docker-entrypoint.sh` (macht migrate + optional seed + start)
 - Port: 3000
 
 ## Test Credentials
@@ -84,5 +104,5 @@ npm run db:seed
 ## Collab Status
 - **Last Session:** 2026-04-13 (Gent)
 - **Last Author:** Gent
-- **Phase:** Phase 3 (Admin Dashboard — Sidebar + Dashboard + Aufgaben + Wissen + KB-Polish fertig)
-- **Next Action:** PR #1 (Phase 1-2) mergen, dann PR #2 + #3 stacked reviewen mit Edon
+- **Phase:** Dev-Workflow eingerichtet (env-files restrukturiert, Coolify Staging trackt `dev`, docker-entrypoint nutzt migrate deploy)
+- **Next Action:** Browser-Test Task-Detail/Edit-Page auf Staging nach naechstem `/dev push`; danach Quick-Create-Modal / DnD Sort / Client-Dashboard (handoff.md)
