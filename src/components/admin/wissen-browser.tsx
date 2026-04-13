@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Search, Plus, Pin, BookOpen } from "lucide-react";
+import { Search, Plus, Pin, BookOpen, PinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EntryCategoryBadge } from "@/components/ui/badge";
+import { MarkdownView } from "@/components/ui/markdown-view";
 import { NoteEditor } from "@/components/admin/note-editor";
 import { entryCategoryLabels } from "@/lib/constants";
 import { timeAgo } from "@/lib/time";
@@ -33,6 +34,7 @@ interface Props {
   initialCategory?: EntryCategory;
   initialClientId?: string;
   initialQuery: string;
+  initialTag?: string;
 }
 
 export function WissenBrowser({
@@ -41,6 +43,7 @@ export function WissenBrowser({
   initialCategory,
   initialClientId,
   initialQuery,
+  initialTag,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -50,6 +53,11 @@ export function WissenBrowser({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // Derive available tags from current entry set (fast)
+  const availableTags = Array.from(
+    new Set(entries.flatMap((e) => e.tags))
+  ).sort();
 
   function updateParam(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
@@ -73,6 +81,22 @@ export function WissenBrowser({
       router.refresh();
     }
   }
+
+  async function togglePin(entry: Entry) {
+    const res = await fetch(`/api/admin/notizen/${entry.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ pinned: !entry.pinned }),
+    });
+    if (res.ok) router.refresh();
+  }
+
+  const activeFilterCount =
+    (initialQuery ? 1 : 0) +
+    (initialCategory ? 1 : 0) +
+    (initialClientId ? 1 : 0) +
+    (initialTag ? 1 : 0);
 
   return (
     <div className="p-6 lg:p-8">
@@ -104,7 +128,7 @@ export function WissenBrowser({
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
         <form onSubmit={onSearchSubmit} className="flex-1 min-w-[200px] relative">
           <Search
             size={14}
@@ -143,6 +167,43 @@ export function WissenBrowser({
         </select>
       </div>
 
+      {/* Tag filter row */}
+      {availableTags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 mb-4">
+          {initialTag && (
+            <button
+              onClick={() => updateParam("tag", null)}
+              className="text-[11px] px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 transition-colors"
+            >
+              #{initialTag} ×
+            </button>
+          )}
+          {availableTags
+            .filter((t) => t !== initialTag)
+            .slice(0, 20)
+            .map((t) => (
+              <button
+                key={t}
+                onClick={() => updateParam("tag", t)}
+                className="text-[11px] px-2 py-0.5 rounded-full bg-dark-300 text-ink-muted hover:text-surface hover:bg-dark-200 transition-colors"
+              >
+                #{t}
+              </button>
+            ))}
+          {activeFilterCount > 0 && (
+            <button
+              onClick={() => {
+                startTransition(() => router.push(pathname));
+                setQuery("");
+              }}
+              className="ml-auto text-[11px] text-ink-muted hover:text-accent transition-colors"
+            >
+              Filter zurücksetzen
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Entries */}
       {entries.length === 0 ? (
         <div className="bg-dark-100 border border-border rounded-xl">
@@ -150,7 +211,7 @@ export function WissenBrowser({
             icon={BookOpen}
             title="Keine Einträge gefunden"
             description={
-              initialQuery || initialCategory || initialClientId
+              activeFilterCount > 0
                 ? "Andere Filter versuchen oder einen neuen Eintrag anlegen."
                 : "Lege den ersten Wissenseintrag an."
             }
@@ -169,7 +230,7 @@ export function WissenBrowser({
                   setExpandedId((p) => (p === entry.id ? null : entry.id))
                 }
               >
-                {entry.pinned && <Pin size={12} className="text-accent shrink-0" />}
+                {entry.pinned && <Pin size={12} className="text-accent shrink-0 fill-accent" />}
                 <EntryCategoryBadge category={entry.category} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-surface truncate">
@@ -177,7 +238,7 @@ export function WissenBrowser({
                   </p>
                   <p className="text-xs text-ink-muted truncate">
                     {entry.author?.name ?? "—"}
-                    {entry.client && <> · <Link href={`/admin/kunden/${entry.client.id}`} className="hover:text-accent">{entry.client.name}</Link></>}
+                    {entry.client && <> · <Link href={`/admin/kunden/${entry.client.id}`} className="hover:text-accent" onClick={(e) => e.stopPropagation()}>{entry.client.name}</Link></>}
                     {entry.project && <> · {entry.project.name}</>}
                     {" · "}{timeAgo(entry.updatedAt)}
                   </p>
@@ -186,22 +247,38 @@ export function WissenBrowser({
 
               {expandedId === entry.id && (
                 <div className="px-4 pb-4 border-t border-border">
-                  <p className="text-sm text-surface whitespace-pre-wrap pt-3 leading-relaxed">
-                    {entry.content}
-                  </p>
+                  <div className="pt-3">
+                    <MarkdownView content={entry.content} />
+                  </div>
                   {entry.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-3">
                       {entry.tags.map((t) => (
-                        <span
+                        <button
                           key={t}
-                          className="text-[10px] px-2 py-0.5 rounded-full bg-dark-300 text-ink-muted"
+                          onClick={() => updateParam("tag", t)}
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-dark-300 text-ink-muted hover:text-accent hover:bg-dark-200 transition-colors"
                         >
                           #{t}
-                        </span>
+                        </button>
                       ))}
                     </div>
                   )}
                   <div className="flex items-center gap-2 mt-4">
+                    <button
+                      onClick={() => togglePin(entry)}
+                      className="inline-flex items-center gap-1 text-xs text-ink-muted hover:text-accent transition-colors"
+                    >
+                      {entry.pinned ? (
+                        <>
+                          <PinOff size={12} /> Unpin
+                        </>
+                      ) : (
+                        <>
+                          <Pin size={12} /> Pin
+                        </>
+                      )}
+                    </button>
+                    <span className="text-ink-muted">·</span>
                     <button
                       onClick={() =>
                         setEditingId((p) => (p === entry.id ? null : entry.id))
