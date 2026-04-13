@@ -84,5 +84,5 @@ npm run db:seed
 ## Collab Status
 - **Last Session:** 2026-04-13 (Gent)
 - **Last Author:** Gent
-- **Phase:** Phase 3 (Admin Dashboard — Sidebar, Dashboard, Projekte-Liste, Aufgaben, Wissen)
-- **Next Action:** Branch `gent/portal-phase-1-2` erstellen + `/dev push`, dann Sidebar-Nav
+- **Phase:** Phase 3 (Admin Dashboard — Sidebar + Dashboard + Aufgaben + Wissen fertig)
+- **Next Action:** PR #1 (Phase 1-2) mergen, dann PR für Phase 3 reviewen mit Edon
