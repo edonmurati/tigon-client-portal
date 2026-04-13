@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
+import { TagInput } from "@/components/ui/tag-input";
+import { MarkdownView } from "@/components/ui/markdown-view";
+import { cn } from "@/lib/utils";
 import type { EntryCategory } from "@/generated/prisma";
 
 interface ExistingEntry {
@@ -13,6 +17,8 @@ interface ExistingEntry {
   category: EntryCategory;
   title: string;
   content: string;
+  tags?: string[];
+  pinned?: boolean;
 }
 
 interface NoteEditorProps {
@@ -39,6 +45,8 @@ const CATEGORY_OPTIONS = [
   { value: "OTHER", label: "Sonstige" },
 ];
 
+type Mode = "write" | "preview";
+
 export function NoteEditor({
   clientId,
   projectId,
@@ -52,10 +60,29 @@ export function NoteEditor({
   );
   const [title, setTitle] = useState(note?.title ?? "");
   const [content, setContent] = useState(note?.content ?? "");
+  const [tags, setTags] = useState<string[]>(note?.tags ?? []);
+  const [pinned, setPinned] = useState<boolean>(note?.pinned ?? false);
+  const [mode, setMode] = useState<Mode>("write");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   const isEdit = !!note;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/notizen/tags", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && d?.tags) {
+          setSuggestions(d.tags.map((t: { tag: string }) => t.tag));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,11 +97,19 @@ export function NoteEditor({
         : "/api/admin/notizen";
       const method = isEdit ? "PATCH" : "POST";
       const body = isEdit
-        ? { category, title: title.trim(), content: content.trim() }
+        ? {
+            category,
+            title: title.trim(),
+            content: content.trim(),
+            tags,
+            pinned,
+          }
         : {
             category,
             title: title.trim(),
             content: content.trim(),
+            tags,
+            pinned,
             ...(clientId ? { clientId } : {}),
             ...(projectId ? { projectId } : {}),
           };
@@ -124,37 +159,109 @@ export function NoteEditor({
           disabled={submitting}
         />
       </div>
-      <Textarea
-        label="Inhalt"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="Inhalt... (Markdown wird unterstützt)"
-        rows={4}
-        required
+
+      <TagInput
+        label="Tags"
+        value={tags}
+        onChange={setTags}
+        suggestions={suggestions}
         disabled={submitting}
       />
-      {error && <p className="text-xs text-red-400">{error}</p>}
-      <div className="flex items-center justify-end gap-2">
-        {onCancel && (
-          <Button
+
+      {/* Write / Preview Tabs */}
+      <div>
+        <div className="flex items-center gap-1 mb-2">
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            disabled={submitting}
+            onClick={() => setMode("write")}
+            className={cn(
+              "text-xs px-3 py-1.5 rounded-lg transition-colors",
+              mode === "write"
+                ? "bg-dark-300 text-accent"
+                : "text-ink-muted hover:text-surface"
+            )}
           >
-            Abbrechen
-          </Button>
+            Schreiben
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("preview")}
+            disabled={!content.trim()}
+            className={cn(
+              "text-xs px-3 py-1.5 rounded-lg transition-colors",
+              mode === "preview"
+                ? "bg-dark-300 text-accent"
+                : "text-ink-muted hover:text-surface",
+              !content.trim() && "opacity-40 cursor-not-allowed"
+            )}
+          >
+            Vorschau
+          </button>
+          <span className="ml-auto text-[10px] text-ink-muted">
+            Markdown + GFM
+          </span>
+        </div>
+
+        {mode === "write" ? (
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Inhalt... (Markdown wird unterstützt)"
+            rows={8}
+            required
+            disabled={submitting}
+          />
+        ) : (
+          <div className="min-h-[200px] bg-dark-100 border border-border rounded-xl px-4 py-3">
+            {content.trim() ? (
+              <MarkdownView content={content} />
+            ) : (
+              <p className="text-xs text-ink-muted italic">Nichts zu zeigen.</p>
+            )}
+          </div>
         )}
-        <Button
-          type="submit"
-          size="sm"
-          loading={submitting}
-          disabled={!title.trim() || !content.trim()}
-        >
-          {isEdit ? "Speichern" : "Eintrag erstellen"}
-        </Button>
       </div>
+
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setPinned((p) => !p)}
+          disabled={submitting}
+          className={cn(
+            "inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors",
+            pinned
+              ? "bg-accent/15 text-accent border border-accent/30"
+              : "text-ink-muted hover:text-surface border border-border"
+          )}
+        >
+          <Pin size={12} className={pinned ? "fill-accent" : ""} />
+          {pinned ? "Angepinnt" : "Anpinnen"}
+        </button>
+
+        <div className="flex items-center gap-2">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              disabled={submitting}
+            >
+              Abbrechen
+            </Button>
+          )}
+          <Button
+            type="submit"
+            size="sm"
+            loading={submitting}
+            disabled={!title.trim() || !content.trim()}
+          >
+            {isEdit ? "Speichern" : "Eintrag erstellen"}
+          </Button>
+        </div>
+      </div>
+
+      {error && <p className="text-xs text-red-400">{error}</p>}
     </form>
   );
 }

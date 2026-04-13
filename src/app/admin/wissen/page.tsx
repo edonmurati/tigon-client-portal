@@ -9,6 +9,7 @@ interface PageProps {
     category?: string;
     clientId?: string;
     q?: string;
+    tag?: string;
   }>;
 }
 
@@ -38,6 +39,7 @@ export default async function WissenPage({ searchParams }: PageProps) {
       ? (sp.category as EntryCategory)
       : undefined;
   const filterClientId = sp.clientId || undefined;
+  const filterTag = sp.tag?.trim() || undefined;
   const q = sp.q?.trim() || "";
 
   const [entries, clients] = await Promise.all([
@@ -45,6 +47,7 @@ export default async function WissenPage({ searchParams }: PageProps) {
       where: {
         ...(filterCategory ? { category: filterCategory } : {}),
         ...(filterClientId ? { clientId: filterClientId } : {}),
+        ...(filterTag ? { tags: { has: filterTag } } : {}),
         ...(q
           ? {
               OR: [
@@ -80,6 +83,7 @@ export default async function WissenPage({ searchParams }: PageProps) {
       initialCategory={filterCategory}
       initialClientId={filterClientId}
       initialQuery={q}
+      initialTag={filterTag}
     />
   );
 }
