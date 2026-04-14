@@ -101,7 +101,8 @@ export async function POST(req: NextRequest) {
         projekttypen,
         ipAddress: ip,
         userAgent,
-        rawPayload: body as import("@prisma/client").Prisma.InputJsonValue,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        rawPayload: body as any,
         // primary contact via ContactPerson — create inline
         contacts: {
           create: {
