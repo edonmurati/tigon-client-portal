@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// Simple in-memory rate limiter: max 4 requests per IP per 10 minutes
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_MAX = 4;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -18,7 +17,34 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
+const ALLOWED_ORIGINS = [
+  "https://tigonautomation.de",
+  "https://www.tigonautomation.de",
+];
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allowed =
+    origin && (ALLOWED_ORIGINS.includes(origin) || origin.startsWith("http://localhost"))
+      ? origin
+      : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: corsHeaders(req.headers.get("origin")),
+  });
+}
+
 export async function POST(req: NextRequest) {
+  const headers = corsHeaders(req.headers.get("origin"));
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
@@ -27,7 +53,7 @@ export async function POST(req: NextRequest) {
   if (!checkRateLimit(ip)) {
     return NextResponse.json(
       { error: "Zu viele Anfragen. Bitte versuche es später erneut." },
-      { status: 429 }
+      { status: 429, headers }
     );
   }
 
@@ -35,7 +61,11 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Ungültiges Format" }, { status: 400 });
+    return NextResponse.json({ error: "Ungültiges Format" }, { status: 400, headers });
+  }
+
+  if (typeof body.fax === "string" && body.fax.trim() !== "") {
+    return NextResponse.json({ success: true }, { status: 201, headers });
   }
 
   // Required fields
@@ -46,24 +76,24 @@ export async function POST(req: NextRequest) {
   if (!unternehmen || !name || !email) {
     return NextResponse.json(
       { error: "unternehmen, name und email sind Pflichtfelder" },
-      { status: 400 }
+      { status: 400, headers }
     );
   }
 
   if (!email.includes("@")) {
-    return NextResponse.json({ error: "Ungültige E-Mail-Adresse" }, { status: 400 });
+    return NextResponse.json({ error: "Ungültige E-Mail-Adresse" }, { status: 400, headers });
   }
 
   // Resolve workspace — use WORKSPACE_ID env var (single-tenant setup)
   const workspaceId = process.env.WORKSPACE_ID;
   if (!workspaceId) {
     console.error("WORKSPACE_ID env var not set");
-    return NextResponse.json({ error: "Serverkonfigurationsfehler" }, { status: 500 });
+    return NextResponse.json({ error: "Serverkonfigurationsfehler" }, { status: 500, headers });
   }
 
   const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
   if (!workspace) {
-    return NextResponse.json({ error: "Workspace nicht gefunden" }, { status: 500 });
+    return NextResponse.json({ error: "Workspace nicht gefunden" }, { status: 500, headers });
   }
 
   const userAgent = req.headers.get("user-agent") ?? undefined;
@@ -116,9 +146,9 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
 
-    return NextResponse.json({ success: true, id: lead.id }, { status: 201 });
+    return NextResponse.json({ success: true, id: lead.id }, { status: 201, headers });
   } catch (err) {
     console.error("[public/leads] DB error:", err);
-    return NextResponse.json({ error: "Interner Fehler" }, { status: 500 });
+    return NextResponse.json({ error: "Interner Fehler" }, { status: 500, headers });
   }
 }
