@@ -147,3 +147,35 @@ export const serverStatusColors: Record<string, string> = {
   OFFLINE: "text-red-400 bg-red-400/10 border border-red-400/20",
   MAINTENANCE: "text-blue-400 bg-blue-400/10 border border-blue-400/20",
 };
+
+// ─── Lead (Inbound) Status ───────────────────────────────────────────────────
+
+export const leadStatusLabels: Record<string, string> = {
+  NEW: "Neu",
+  QUALIFIED: "Qualifiziert",
+  OUTREACH_SENT: "Outreach gesendet",
+  FOLLOWUP_1: "Follow-up 1",
+  FOLLOWUP_2: "Follow-up 2",
+  REPLIED: "Geantwortet",
+  IN_CONVERSATION: "Im Gespräch",
+  MEETING_BOOKED: "Meeting gebucht",
+  CONVERTED: "Konvertiert",
+  REJECTED: "Abgelehnt",
+  UNRESPONSIVE: "Keine Reaktion",
+  PARKED: "Geparkt",
+};
+
+export const leadStatusColors: Record<string, string> = {
+  NEW: "text-accent bg-accent/10 border border-accent/20",
+  QUALIFIED: "text-blue-400 bg-blue-400/10 border border-blue-400/20",
+  OUTREACH_SENT: "text-purple-400 bg-purple-400/10 border border-purple-400/20",
+  FOLLOWUP_1: "text-purple-400 bg-purple-400/10 border border-purple-400/20",
+  FOLLOWUP_2: "text-purple-400 bg-purple-400/10 border border-purple-400/20",
+  REPLIED: "text-cyan-400 bg-cyan-400/10 border border-cyan-400/20",
+  IN_CONVERSATION: "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20",
+  MEETING_BOOKED: "text-orange-400 bg-orange-400/10 border border-orange-400/20",
+  CONVERTED: "text-green-400 bg-green-400/10 border border-green-400/20",
+  REJECTED: "text-red-400 bg-red-400/10 border border-red-400/20",
+  UNRESPONSIVE: "text-ink-muted bg-dark-300 border border-border",
+  PARKED: "text-ink-muted bg-dark-300 border border-border",
+};
