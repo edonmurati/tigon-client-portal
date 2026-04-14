@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
+import { assertClientInWorkspace, assertProjectInWorkspace } from "@/lib/api";
 import type { ServerStatus } from "@/generated/prisma";
 
 export async function GET(req: NextRequest) {
@@ -72,6 +73,11 @@ export async function POST(req: NextRequest) {
   if (!name || typeof name !== "string" || name.trim().length === 0) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
+
+  const clientCheck = await assertClientInWorkspace(clientId, user.workspaceId);
+  if (clientCheck) return clientCheck;
+  const projectCheck = await assertProjectInWorkspace(projectId, user.workspaceId);
+  if (projectCheck) return projectCheck;
 
   const server = await prisma.server.create({
     data: {

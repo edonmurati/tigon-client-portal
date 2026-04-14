@@ -71,3 +71,39 @@ export function apiSuccess<T>(data: T, status = 200): NextResponse {
 export function apiError(message: string, status = 400): NextResponse {
   return NextResponse.json({ error: message }, { status });
 }
+
+/**
+ * Ensure a clientId (if given) belongs to the caller's workspace.
+ * Returns null if ok or input is null/undefined, or a 404 NextResponse.
+ */
+export async function assertClientInWorkspace(
+  clientId: string | null | undefined,
+  workspaceId: string
+): Promise<NextResponse | null> {
+  if (!clientId) return null;
+  const { prisma } = await import("@/lib/prisma");
+  const client = await prisma.client.findFirst({
+    where: { id: clientId, workspaceId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!client) return apiError("Kunde nicht gefunden", 404);
+  return null;
+}
+
+/**
+ * Ensure a projectId (if given) belongs to the caller's workspace.
+ * Returns null if ok or input is null/undefined, or a 404 NextResponse.
+ */
+export async function assertProjectInWorkspace(
+  projectId: string | null | undefined,
+  workspaceId: string
+): Promise<NextResponse | null> {
+  if (!projectId) return null;
+  const { prisma } = await import("@/lib/prisma");
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, workspaceId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!project) return apiError("Projekt nicht gefunden", 404);
+  return null;
+}

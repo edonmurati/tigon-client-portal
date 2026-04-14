@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
+import { assertClientInWorkspace, assertProjectInWorkspace } from "@/lib/api";
 import type { ServerStatus } from "@/generated/prisma";
 
 interface RouteParams {
@@ -73,6 +74,15 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (body.clientId !== undefined) {
+    const check = await assertClientInWorkspace(body.clientId, user.workspaceId);
+    if (check) return check;
+  }
+  if (body.projectId !== undefined) {
+    const check = await assertProjectInWorkspace(body.projectId, user.workspaceId);
+    if (check) return check;
   }
 
   const updateData: Record<string, unknown> = {};

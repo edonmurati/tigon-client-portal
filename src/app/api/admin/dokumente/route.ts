@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { saveFile } from "@/lib/storage";
 import { logActivity } from "@/lib/activity";
+import { assertClientInWorkspace, assertProjectInWorkspace } from "@/lib/api";
 import type { DocumentCategory } from "@/generated/prisma";
 
 const VALID_CATEGORIES: DocumentCategory[] = [
@@ -79,6 +80,11 @@ export async function POST(req: NextRequest) {
   const projectId = formData.get("projectId") as string | null;
   const category = formData.get("category") as string | null;
   const displayName = formData.get("displayName") as string | null;
+
+  const clientCheck = await assertClientInWorkspace(clientId, user.workspaceId);
+  if (clientCheck) return clientCheck;
+  const projectCheck = await assertProjectInWorkspace(projectId, user.workspaceId);
+  if (projectCheck) return projectCheck;
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const targetDir = clientId ? `clients/${clientId}` : "general";

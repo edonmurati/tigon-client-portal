@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encrypt } from "@/lib/vault";
 import { logActivity } from "@/lib/activity";
+import { assertClientInWorkspace, assertProjectInWorkspace } from "@/lib/api";
 import type { CredentialType } from "@/generated/prisma";
 
 const VALID_CREDENTIAL_TYPES: CredentialType[] = [
@@ -91,6 +92,11 @@ export async function POST(req: NextRequest) {
   if (!value || typeof value !== "string" || value.trim().length === 0) {
     return NextResponse.json({ error: "Value is required" }, { status: 400 });
   }
+
+  const clientCheck = await assertClientInWorkspace(clientId, user.workspaceId);
+  if (clientCheck) return clientCheck;
+  const projectCheck = await assertProjectInWorkspace(projectId, user.workspaceId);
+  if (projectCheck) return projectCheck;
 
   const { encValue, encIv, encTag } = encrypt(value);
 

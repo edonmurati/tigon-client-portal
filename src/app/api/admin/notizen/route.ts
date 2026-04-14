@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
-import { apiSuccess, isParseError, parseBody } from "@/lib/api";
+import { apiSuccess, isParseError, parseBody, assertClientInWorkspace, assertProjectInWorkspace } from "@/lib/api";
 import { createEntrySchema } from "@/lib/validations/knowledge";
 
 export async function GET(req: NextRequest) {
@@ -42,6 +42,11 @@ export async function POST(req: NextRequest) {
   if (isParseError(parsed)) return parsed;
 
   const { clientId, projectId, category, title, content, tags, pinned } = parsed;
+
+  const clientCheck = await assertClientInWorkspace(clientId, user.workspaceId);
+  if (clientCheck) return clientCheck;
+  const projectCheck = await assertProjectInWorkspace(projectId, user.workspaceId);
+  if (projectCheck) return projectCheck;
 
   const entry = await prisma.knowledgeEntry.create({
     data: {

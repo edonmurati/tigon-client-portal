@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
-import { apiSuccess, isParseError, parseBody } from "@/lib/api";
+import { apiSuccess, isParseError, parseBody, assertClientInWorkspace, assertProjectInWorkspace } from "@/lib/api";
 import { updateEntrySchema } from "@/lib/validations/knowledge";
 import type { Prisma } from "@/generated/prisma";
 
@@ -52,6 +52,15 @@ export async function PATCH(
   });
   if (!existing) {
     return NextResponse.json({ error: "Eintrag nicht gefunden" }, { status: 404 });
+  }
+
+  if (parsed.clientId !== undefined) {
+    const check = await assertClientInWorkspace(parsed.clientId, user.workspaceId);
+    if (check) return check;
+  }
+  if (parsed.projectId !== undefined) {
+    const check = await assertProjectInWorkspace(parsed.projectId, user.workspaceId);
+    if (check) return check;
   }
 
   const data: Prisma.KnowledgeEntryUncheckedUpdateInput = {};

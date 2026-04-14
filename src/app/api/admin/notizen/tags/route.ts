@@ -9,6 +9,7 @@ export async function GET() {
   }
 
   const entries = await prisma.knowledgeEntry.findMany({
+    where: { workspaceId: user.workspaceId, deletedAt: null },
     select: { tags: true },
   });
 

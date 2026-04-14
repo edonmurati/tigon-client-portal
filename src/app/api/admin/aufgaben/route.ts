@@ -8,6 +8,7 @@ import {
   isParseError,
   apiSuccess,
   apiError,
+  assertClientInWorkspace,
 } from "@/lib/api";
 import { createTaskSchema } from "@/lib/validations/task";
 import { ensureInternalProject } from "@/lib/internal-project";
@@ -75,6 +76,9 @@ export async function POST(req: NextRequest) {
     select: { id: true },
   });
   if (!project) return apiError("Projekt nicht gefunden", 404);
+
+  const clientCheck = await assertClientInWorkspace(body.clientId, auth.workspaceId);
+  if (clientCheck) return clientCheck;
 
   const assigneeIds =
     body.assigneeIds && body.assigneeIds.length > 0

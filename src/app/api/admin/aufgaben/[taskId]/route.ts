@@ -8,6 +8,8 @@ import {
   isParseError,
   apiSuccess,
   apiError,
+  assertClientInWorkspace,
+  assertProjectInWorkspace,
 } from "@/lib/api";
 import { updateTaskSchema } from "@/lib/validations/task";
 
@@ -62,6 +64,15 @@ export async function PATCH(
     },
   });
   if (!existing) return apiError("Aufgabe nicht gefunden", 404);
+
+  if (body.clientId !== undefined) {
+    const check = await assertClientInWorkspace(body.clientId, auth.workspaceId);
+    if (check) return check;
+  }
+  if (body.projectId !== undefined) {
+    const check = await assertProjectInWorkspace(body.projectId, auth.workspaceId);
+    if (check) return check;
+  }
 
   const data: Record<string, unknown> = {};
   if (body.title !== undefined) data.title = body.title;
