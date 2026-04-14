@@ -52,15 +52,24 @@ export default async function AdminDashboardPage() {
       },
     }),
     prisma.task.findMany({
-      where: { completedAt: null, assignees: { some: { userId: user.id } } },
+      where: {
+        completedAt: null,
+        dueDate: { not: null },
+        project: { workspaceId: user.workspaceId, deletedAt: null },
+      },
       orderBy: [{ dueDate: "asc" }, { priority: "desc" }],
       take: 5,
       include: {
         client: { select: { id: true, name: true, stage: true } },
         project: { select: { id: true, name: true } },
+        assignees: {
+          include: { user: { select: { id: true, name: true } } },
+        },
       },
     }),
   ]);
+
+  const upcomingTasks = myTasks;
 
   const stats = [
     {
@@ -187,11 +196,11 @@ export default async function AdminDashboardPage() {
           </div>
         </Card>
 
-        {/* My Tasks */}
+        {/* Naechste Deadlines */}
         <Card>
           <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-border">
             <h2 className="font-serif text-lg text-surface tracking-tight">
-              Meine Aufgaben
+              Nächste Deadlines
             </h2>
             <Link
               href="/admin/aufgaben"
@@ -201,17 +210,18 @@ export default async function AdminDashboardPage() {
             </Link>
           </div>
           <div className="divide-y divide-border">
-            {myTasks.length === 0 ? (
+            {upcomingTasks.length === 0 ? (
               <p className="text-sm text-ink-muted px-5 py-6 text-center">
-                Keine offenen Aufgaben. Saubere Pipeline.
+                Keine Aufgaben mit Fälligkeitsdatum.
               </p>
             ) : (
-              myTasks.map((t) => {
+              upcomingTasks.map((t) => {
                 const overdue = t.dueDate && t.dueDate < now;
+                const assigneeNames = t.assignees.map((a) => a.user.name).join(", ");
                 return (
                   <Link
                     key={t.id}
-                    href="/admin/aufgaben"
+                    href={`/admin/aufgaben/${t.id}`}
                     className="block px-5 py-3 hover:bg-dark-200 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -221,6 +231,7 @@ export default async function AdminDashboardPage() {
                         </p>
                         <p className="text-xs text-ink-muted mt-0.5 truncate">
                           {t.client?.name ?? t.project?.name ?? "Allgemein"}
+                          {assigneeNames && <span className="ml-2">· {assigneeNames}</span>}
                           {t.dueDate && (
                             <span className={overdue ? "text-red-400 ml-2" : "ml-2"}>
                               {overdue ? "Überfällig: " : "Fällig: "}
