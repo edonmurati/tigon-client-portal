@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut } from "lucide-react";
+import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { ProtectedRoute } from "@/components/auth/auth-provider";
@@ -11,7 +11,8 @@ import { ProtectedRoute } from "@/components/auth/auth-provider";
 const navSections = [
   {
     items: [
-      { href: "/admin/impulse", label: "Impulse", icon: Bell, matchPrefix: "/admin/impulse" },
+      { href: "/admin/impulse", label: "Impulse", icon: Bell, matchPrefix: "/admin/impulse", badgeKey: "impulse" as const },
+      { href: "/admin/leads", label: "Leads", icon: Inbox, matchPrefix: "/admin/leads", badgeKey: "leads" as const },
       { href: "/admin/kunden", label: "Kunden", icon: Users, matchPrefix: "/admin/kunden" },
       { href: "/admin/projekte", label: "Projekte", icon: FolderOpen, matchPrefix: "/admin/projekte" },
     ],
@@ -31,10 +32,12 @@ function AdminSidebar({
   mobileOpen,
   onClose,
   unreadCount,
+  newLeadsCount,
 }: {
   mobileOpen: boolean;
   onClose: () => void;
   unreadCount: number;
+  newLeadsCount: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -91,9 +94,14 @@ function AdminSidebar({
                   >
                     <Icon size={16} className="shrink-0" />
                     <span>{item.label}</span>
-                    {item.href === "/admin/impulse" && unreadCount > 0 && (
+                    {"badgeKey" in item && item.badgeKey === "impulse" && unreadCount > 0 && (
                       <span className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-ink text-[10px] font-bold">
                         {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                    {"badgeKey" in item && item.badgeKey === "leads" && newLeadsCount > 0 && (
+                      <span className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent text-ink text-[10px] font-bold">
+                        {newLeadsCount > 99 ? "99+" : newLeadsCount}
                       </span>
                     )}
                   </Link>
@@ -153,22 +161,28 @@ function AdminSidebar({
 function AdminShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
 
   useEffect(() => {
-    async function fetchUnread() {
+    async function fetchCounts() {
       try {
-        const res = await fetch("/api/admin/impulse?status=NEW", {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = await res.json();
+        const [impulseRes, leadsRes] = await Promise.all([
+          fetch("/api/admin/impulse?status=NEW", { credentials: "include" }),
+          fetch("/api/admin/leads?status=NEW", { credentials: "include" }),
+        ]);
+        if (impulseRes.ok) {
+          const data = await impulseRes.json();
           setUnreadCount(data.impulses?.length ?? 0);
+        }
+        if (leadsRes.ok) {
+          const data = await leadsRes.json();
+          setNewLeadsCount(data.leads?.length ?? 0);
         }
       } catch {
         // ignore
       }
     }
-    fetchUnread();
+    fetchCounts();
   }, []);
 
   return (
@@ -177,6 +191,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
         unreadCount={unreadCount}
+        newLeadsCount={newLeadsCount}
       />
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
