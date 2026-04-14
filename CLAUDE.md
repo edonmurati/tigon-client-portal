@@ -104,5 +104,5 @@ arbeits-branch (lokal) ──/dev push──→ dev (Coolify Staging) ──/dev
 ## Collab Status
 - **Last Session:** 2026-04-14 (Gent)
 - **Last Author:** Gent
-- **Phase:** Multi-Tenancy gehaertet (4 P0-Leaks geschlossen), Task-Status-PATCH funktional, Multi-Assign Backend verifiziert
-- **Next Action:** Staging-Deploy verifizieren (erster migrate-deploy mit den 2 Migrations) + Multi-Assign UI im Browser final pruefen
+- **Phase:** Staging-Deploy ausgerollt (P0+P1 Multi-Tenancy-Hardening + FK-Injection-Guards + Nightly-Export live). `dev` auf origin bei 20a1779, Coolify rebuildet + Container macht `migrate deploy` beim Start.
+- **Next Action:** Staging im Browser smoke-testen (http://habit:3001/admin/aufgaben/cmnyk5ama0002vqfl2xq9yxwh fuer Multi-Assign, dann `/dev done` → main).

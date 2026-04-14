@@ -5,6 +5,10 @@
 - Task-Status PATCH: `status` zu `updateTaskSchema` hinzugefuegt + Handler in `/api/admin/aufgaben/[taskId]` mit `completedAt`-Auto-Sync (DONE setzt completedAt, Reopen nullt es)
 - Credentials POST: Invalid `type` gibt jetzt 400 zurueck statt 500 (Pre-Validation gegen `CredentialType` Enum bevor Prisma erreicht wird)
 - Multi-Assign API verifiziert: `assigneeIds`-Array auf Task-PATCH persistiert beide User, Board-Endpoint liefert "Gent Cungu, Edon Muratovic"
+- FK-Injection-Guards: Neue Helpers `assertClientInWorkspace` / `assertProjectInWorkspace` in `src/lib/api.ts`; eingebaut in 8 Create/Update-Routen (aufgaben POST+PATCH, dokumente POST, infrastruktur POST+PATCH, zugangsdaten POST+PATCH, notizen POST+PATCH) — verhindert dass cross-workspace clientId/projectId referenziert werden koennen
+- Notizen Tag-Liste: `/api/admin/notizen/tags` filtert jetzt nach `workspaceId` + `deletedAt: null` (war vorher global ueber alle Workspaces)
+- Dashboard "Naechste Deadlines" Widget statt "Meine Aufgaben" (filtert nach `dueDate: { not: null }`, sortiert aufsteigend, Overdue-Styling)
+- Nightly-Export Script (`scripts/nightly-export.sh`) + Cron (03:00 Uhr) → `~/tigon/_export/tigon-portal/*.sql.gz`, 14-Tage-Retention
 
 ### 2026-04-13 (Gent)
 - Schema: `ClientStatus` (3 Werte) → `ClientStage` (6: COLD/WARM/ACTIVE/PRO_BONO/PAUSED/ENDED)
