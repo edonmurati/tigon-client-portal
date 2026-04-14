@@ -10,6 +10,7 @@ import {
   apiError,
 } from "@/lib/api";
 import { createTaskSchema } from "@/lib/validations/task";
+import { ensureInternalProject } from "@/lib/internal-project";
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin();
@@ -61,13 +62,13 @@ export async function POST(req: NextRequest) {
   const body = await parseBody(req, createTaskSchema);
   if (isParseError(body)) return body;
 
-  if (!body.projectId) {
-    return apiError("projectId ist erforderlich", 400);
-  }
+  const projectId = body.projectId
+    ? body.projectId
+    : await ensureInternalProject(auth.workspaceId);
 
   const project = await prisma.project.findFirst({
     where: {
-      id: body.projectId,
+      id: projectId,
       workspaceId: auth.workspaceId,
       deletedAt: null,
     },
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
       title: body.title,
       description: body.description ?? null,
       clientId: body.clientId ?? null,
-      projectId: body.projectId,
+      projectId,
       priority: body.priority ?? "NORMAL",
       dueDate: body.dueDate && body.dueDate !== "" ? new Date(body.dueDate) : null,
       ...(assigneeIds.length > 0
