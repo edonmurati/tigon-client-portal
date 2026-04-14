@@ -15,9 +15,8 @@ export default async function ProjectListPage() {
   if (!user.clientId) redirect("/login");
 
   const projects = await prisma.project.findMany({
-    where: { clientId: user.clientId },
+    where: { clientId: user.clientId, deletedAt: null },
     include: {
-      areas: { select: { id: true } },
       _count: {
         select: {
           impulses: { where: { status: { not: "DONE" } } },

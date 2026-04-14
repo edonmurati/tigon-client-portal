@@ -8,7 +8,8 @@ export default async function InfrastrukturPage() {
   if (!user || user.role !== "ADMIN") redirect("/login");
 
   const [servers, clients, projects] = await Promise.all([
-    prisma.serverEntry.findMany({
+    prisma.server.findMany({
+      where: { deletedAt: null },
       select: {
         id: true,
         name: true,

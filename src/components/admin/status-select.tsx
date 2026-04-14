@@ -29,6 +29,16 @@ const statusConfig: Record<
     color: "text-yellow-400 border-yellow-400/30 bg-yellow-400/10",
     dotColor: "bg-yellow-400",
   },
+  ACCEPTED: {
+    label: "Angenommen",
+    color: "text-cyan-400 border-cyan-400/30 bg-cyan-400/10",
+    dotColor: "bg-cyan-400",
+  },
+  REJECTED: {
+    label: "Abgelehnt",
+    color: "text-red-400 border-red-400/30 bg-red-400/10",
+    dotColor: "bg-red-400",
+  },
   DONE: {
     label: "Erledigt",
     color: "text-green-400 border-green-400/30 bg-green-400/10",
@@ -36,7 +46,14 @@ const statusConfig: Record<
   },
 };
 
-const allStatuses: ImpulseStatus[] = ["NEW", "SEEN", "IN_PROGRESS", "DONE"];
+const allStatuses: ImpulseStatus[] = [
+  "NEW",
+  "SEEN",
+  "IN_PROGRESS",
+  "ACCEPTED",
+  "REJECTED",
+  "DONE",
+];
 
 export function StatusSelect({
   impulseId,

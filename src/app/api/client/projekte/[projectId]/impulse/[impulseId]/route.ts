@@ -20,7 +20,7 @@ export async function GET(
 
   // Verify project belongs to this client
   const project = await prisma.project.findFirst({
-    where: { id: projectId, clientId: user.clientId },
+    where: { id: projectId, clientId: user.clientId, deletedAt: null },
     select: { id: true },
   });
 
@@ -29,12 +29,12 @@ export async function GET(
   }
 
   const impulse = await prisma.impulse.findFirst({
-    where: { id: impulseId, projectId },
+    where: { id: impulseId, projectId, deletedAt: null },
     include: {
-      area: { select: { id: true, name: true } },
       author: { select: { id: true, name: true, role: true } },
       project: { select: { id: true, name: true } },
       comments: {
+        where: { deletedAt: null },
         include: {
           author: { select: { id: true, name: true, role: true } },
         },

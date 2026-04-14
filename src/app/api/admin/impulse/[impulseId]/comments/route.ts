@@ -25,9 +25,13 @@ export async function POST(
     return NextResponse.json({ error: "Content is required" }, { status: 400 });
   }
 
-  // Verify impulse exists and get related data for webhook
-  const impulse = await prisma.impulse.findUnique({
-    where: { id: impulseId },
+  // Verify impulse exists in workspace, fetch related data for webhook
+  const impulse = await prisma.impulse.findFirst({
+    where: {
+      id: impulseId,
+      deletedAt: null,
+      project: { workspaceId: user.workspaceId, deletedAt: null },
+    },
     include: {
       project: {
         include: {

@@ -3,11 +3,12 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ActivityFeed } from "@/components/admin/activity-feed";
 import { ActivityFilters } from "@/components/admin/activity-filters";
+import type { ActivityKind } from "@/generated/prisma";
 
 interface PageProps {
   searchParams: Promise<{
     clientId?: string;
-    entityType?: string;
+    kind?: string;
     userId?: string;
   }>;
 }
@@ -20,29 +21,32 @@ export default async function AktivitaetPage({ searchParams }: PageProps) {
 
   const sp = await searchParams;
   const filterClientId = sp.clientId;
-  const filterEntityType = sp.entityType;
+  const filterKind = sp.kind as ActivityKind | undefined;
   const filterUserId = sp.userId;
 
   const [rawActivities, clients, adminUsers] = await Promise.all([
-    prisma.activityLog.findMany({
+    prisma.activity.findMany({
       where: {
+        workspaceId: user.workspaceId,
         ...(filterClientId ? { clientId: filterClientId } : {}),
-        ...(filterEntityType ? { entityType: filterEntityType } : {}),
-        ...(filterUserId ? { userId: filterUserId } : {}),
+        ...(filterKind ? { kind: filterKind } : {}),
+        ...(filterUserId ? { actorId: filterUserId } : {}),
       },
       include: {
-        user: { select: { id: true, name: true } },
+        actor: { select: { id: true, name: true } },
         client: { select: { id: true, name: true } },
+        project: { select: { id: true, name: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { occurredAt: "desc" },
       take: LIMIT + 1,
     }),
     prisma.client.findMany({
+      where: { workspaceId: user.workspaceId, deletedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
-      where: { role: "ADMIN" },
+      where: { workspaceId: user.workspaceId, role: "ADMIN", deletedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -52,35 +56,31 @@ export default async function AktivitaetPage({ searchParams }: PageProps) {
   const activities = hasMore ? rawActivities.slice(0, LIMIT) : rawActivities;
   const nextCursor = hasMore ? activities[activities.length - 1].id : null;
 
-  // Serialize dates for client component
   const serialized = activities.map((a) => ({
     ...a,
-    createdAt: a.createdAt.toISOString(),
+    occurredAt: a.occurredAt.toISOString(),
   }));
 
   return (
     <div className="p-6 lg:p-8">
-      {/* Header */}
       <div className="mb-6">
         <h1 className="font-serif text-3xl text-surface tracking-tightest">
-          Aktivität
+          Aktivitaet
         </h1>
         <p className="text-ink-muted text-sm mt-1">
           Audit-Log aller CRM-Aktionen
         </p>
       </div>
 
-      {/* Filters */}
       <ActivityFilters clients={clients} users={adminUsers} />
 
-      {/* Feed */}
       <div className="mt-4">
         <ActivityFeed
           initialActivities={serialized}
           initialNextCursor={nextCursor}
           filters={{
             clientId: filterClientId,
-            entityType: filterEntityType,
+            kind: filterKind,
             userId: filterUserId,
           }}
         />

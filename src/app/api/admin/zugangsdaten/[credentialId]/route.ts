@@ -3,6 +3,7 @@ import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encrypt } from "@/lib/vault";
 import { logActivity } from "@/lib/activity";
+import { assertClientInWorkspace, assertProjectInWorkspace } from "@/lib/api";
 import type { CredentialType } from "@/generated/prisma";
 
 interface RouteParams {
@@ -17,8 +18,8 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
   const { credentialId } = await params;
 
-  const credential = await prisma.credential.findUnique({
-    where: { id: credentialId },
+  const credential = await prisma.credential.findFirst({
+    where: { id: credentialId, workspaceId: user.workspaceId, deletedAt: null },
     select: {
       id: true,
       label: true,
@@ -51,8 +52,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
   const { credentialId } = await params;
 
-  const existing = await prisma.credential.findUnique({
-    where: { id: credentialId },
+  const existing = await prisma.credential.findFirst({
+    where: { id: credentialId, workspaceId: user.workspaceId, deletedAt: null },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -73,6 +74,15 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (body.clientId !== undefined) {
+    const check = await assertClientInWorkspace(body.clientId, user.workspaceId);
+    if (check) return check;
+  }
+  if (body.projectId !== undefined) {
+    const check = await assertProjectInWorkspace(body.projectId, user.workspaceId);
+    if (check) return check;
   }
 
   const updateData: Record<string, unknown> = {};
@@ -112,12 +122,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   });
 
   logActivity({
-    userId: user.id,
-    action: "credential.update",
-    entityType: "Credential",
-    entityId: credential.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "UPDATED",
     clientId: credential.clientId ?? undefined,
-    meta: { label: credential.label },
+    projectId: credential.projectId ?? undefined,
+    subject: `Zugangsdaten aktualisiert: ${credential.label}`,
+    tags: ["credential"],
   });
 
   return NextResponse.json({ credential });
@@ -131,8 +143,8 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
 
   const { credentialId } = await params;
 
-  const existing = await prisma.credential.findUnique({
-    where: { id: credentialId },
+  const existing = await prisma.credential.findFirst({
+    where: { id: credentialId, workspaceId: user.workspaceId, deletedAt: null },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -141,12 +153,14 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   await prisma.credential.delete({ where: { id: credentialId } });
 
   logActivity({
-    userId: user.id,
-    action: "credential.delete",
-    entityType: "Credential",
-    entityId: credentialId,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "DELETED",
     clientId: existing.clientId ?? undefined,
-    meta: { label: existing.label },
+    projectId: existing.projectId ?? undefined,
+    subject: `Zugangsdaten geloescht: ${existing.label}`,
+    tags: ["credential"],
   });
 
   return NextResponse.json({ success: true });

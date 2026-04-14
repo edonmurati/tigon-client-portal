@@ -15,11 +15,8 @@ export async function GET() {
 
   const [projects, recentImpulses] = await Promise.all([
     prisma.project.findMany({
-      where: { clientId: user.clientId },
+      where: { clientId: user.clientId, deletedAt: null },
       include: {
-        areas: {
-          select: { id: true, name: true },
-        },
         milestones: {
           where: { completedAt: null },
           select: { id: true, dueDate: true },
@@ -38,7 +35,8 @@ export async function GET() {
     }),
     prisma.impulse.findMany({
       where: {
-        project: { clientId: user.clientId },
+        project: { clientId: user.clientId, deletedAt: null },
+        deletedAt: null,
       },
       select: {
         id: true,

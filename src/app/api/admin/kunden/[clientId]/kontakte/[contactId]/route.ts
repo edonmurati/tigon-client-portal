@@ -29,10 +29,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const existing = await prisma.contactPerson.findUnique({
-    where: { id: contactId },
+  const existing = await prisma.contactPerson.findFirst({
+    where: {
+      id: contactId,
+      clientId,
+      client: { workspaceId: user.workspaceId },
+    },
   });
-  if (!existing || existing.clientId !== clientId) {
+  if (!existing) {
     return NextResponse.json({ error: "Kontakt nicht gefunden" }, { status: 404 });
   }
 
@@ -57,12 +61,14 @@ export async function PATCH(
   });
 
   logActivity({
-    userId: user.id,
-    action: "UPDATE",
-    entityType: "ContactPerson",
-    entityId: contact.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "UPDATED",
     clientId,
-    meta: { name: contact.name },
+    contactId: contact.id,
+    subject: `Kontakt aktualisiert: ${contact.name}`,
+    tags: ["contact"],
   });
 
   return NextResponse.json({ contact });
@@ -79,22 +85,28 @@ export async function DELETE(
 
   const { clientId, contactId } = await params;
 
-  const existing = await prisma.contactPerson.findUnique({
-    where: { id: contactId },
+  const existing = await prisma.contactPerson.findFirst({
+    where: {
+      id: contactId,
+      clientId,
+      client: { workspaceId: user.workspaceId },
+    },
   });
-  if (!existing || existing.clientId !== clientId) {
+  if (!existing) {
     return NextResponse.json({ error: "Kontakt nicht gefunden" }, { status: 404 });
   }
 
   await prisma.contactPerson.delete({ where: { id: contactId } });
 
   logActivity({
-    userId: user.id,
-    action: "DELETE",
-    entityType: "ContactPerson",
-    entityId: contactId,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "DELETED",
     clientId,
-    meta: { name: existing.name },
+    contactId: contactId,
+    subject: `Kontakt geloescht: ${existing.name}`,
+    tags: ["contact"],
   });
 
   return NextResponse.json({ success: true });

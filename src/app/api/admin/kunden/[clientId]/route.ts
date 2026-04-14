@@ -23,12 +23,12 @@ export async function GET(
 
   const { clientId } = await params;
 
-  const client = await prisma.client.findUnique({
-    where: { id: clientId },
+  const client = await prisma.client.findFirst({
+    where: { id: clientId, workspaceId: user.workspaceId },
     include: {
       projects: {
+        where: { deletedAt: null },
         include: {
-          areas: true,
           _count: {
             select: { milestones: true, impulses: true },
           },
@@ -77,12 +77,24 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
   }
 
-  // Check slug uniqueness if changing
+  const existing = await prisma.client.findFirst({
+    where: { id: clientId, workspaceId: user.workspaceId },
+    select: { id: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Client not found" }, { status: 404 });
+  }
+
+  // Check slug uniqueness if changing (scoped to workspace)
   if (body.slug) {
-    const existing = await prisma.client.findFirst({
-      where: { slug: body.slug.trim(), NOT: { id: clientId } },
+    const slugClash = await prisma.client.findFirst({
+      where: {
+        workspaceId: user.workspaceId,
+        slug: body.slug.trim().toLowerCase(),
+        NOT: { id: clientId },
+      },
     });
-    if (existing) {
+    if (slugClash) {
       return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
     }
   }

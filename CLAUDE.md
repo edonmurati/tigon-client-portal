@@ -102,7 +102,7 @@ arbeits-branch (lokal) ──/dev push──→ dev (Coolify Staging) ──/dev
 - Flat role model: ADMIN | CLIENT
 
 ## Collab Status
-- **Last Session:** 2026-04-13 (Gent)
+- **Last Session:** 2026-04-14 (Gent)
 - **Last Author:** Gent
-- **Phase:** Dev-Workflow eingerichtet (env-files restrukturiert, Coolify Staging trackt `dev`, docker-entrypoint nutzt migrate deploy), Task-Detail/Edit-Page gemerged
-- **Next Action:** Staging-Deploy verifizieren (erster migrate-deploy statt db-push — Baseline ggf. noetig), dann Task-Detail im Browser testen
+- **Phase:** Multi-Tenancy gehaertet (4 P0-Leaks geschlossen), Task-Status-PATCH funktional, Multi-Assign Backend verifiziert
+- **Next Action:** Staging-Deploy verifizieren (erster migrate-deploy mit den 2 Migrations) + Multi-Assign UI im Browser final pruefen

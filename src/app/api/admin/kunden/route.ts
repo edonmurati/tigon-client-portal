@@ -18,6 +18,7 @@ export async function GET(_req: NextRequest) {
   }
 
   const clients = await prisma.client.findMany({
+    where: { workspaceId: user.workspaceId, deletedAt: null },
     include: {
       _count: {
         select: { projects: true, users: true },
@@ -63,17 +64,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Check slug uniqueness
+  const normalizedSlug = slug.trim().toLowerCase();
+
+  // Check slug uniqueness within workspace
   const existing = await prisma.client.findUnique({
-    where: { slug: slug.trim() },
+    where: {
+      workspaceId_slug: { workspaceId: user.workspaceId, slug: normalizedSlug },
+    },
   });
   if (existing) {
     return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
   }
 
-  // Check email uniqueness
-  const existingUser = await prisma.user.findUnique({
-    where: { email: firstUser.email.trim() },
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      workspaceId: user.workspaceId,
+      email: firstUser.email.trim().toLowerCase(),
+    },
   });
   if (existingUser) {
     return NextResponse.json(
@@ -87,11 +94,13 @@ export async function POST(req: NextRequest) {
 
   const client = await prisma.client.create({
     data: {
+      workspaceId: user.workspaceId,
       name: name.trim(),
-      slug: slug.trim().toLowerCase(),
+      slug: normalizedSlug,
       partnershipScope: partnershipScope?.trim() || null,
       users: {
         create: {
+          workspaceId: user.workspaceId,
           name: firstUser.name.trim(),
           email: firstUser.email.trim().toLowerCase(),
           passwordHash,

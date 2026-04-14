@@ -1,98 +1,68 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAuthUser } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  requireAdmin,
+  isUnauthorized,
+  apiSuccess,
+  apiError,
+} from "@/lib/api";
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const user = await getAuthUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireAdmin();
+  if (isUnauthorized(auth)) return auth;
 
   const { projectId } = await params;
 
-  const areas = await prisma.projectArea.findMany({
-    where: { projectId },
-    orderBy: { sortOrder: "asc" },
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, workspaceId: auth.workspaceId, deletedAt: null },
+    select: { areas: true },
   });
+  if (!project) return apiError("Projekt nicht gefunden", 404);
 
-  return NextResponse.json({ areas });
+  return apiSuccess({ areas: project.areas });
 }
 
-export async function POST(
+export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const user = await getAuthUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireAdmin();
+  if (isUnauthorized(auth)) return auth;
 
   const { projectId } = await params;
 
-  let body: { name?: string };
+  let body: { areas?: unknown };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return apiError("Invalid JSON", 400);
   }
 
-  const { name } = body;
-  if (!name || typeof name !== "string" || name.trim().length === 0) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  if (!Array.isArray(body.areas) || !body.areas.every((a) => typeof a === "string")) {
+    return apiError("areas muss ein string[] sein", 400);
   }
 
-  // Verify project exists
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
-  if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
-  }
+  const cleaned = Array.from(
+    new Set(
+      (body.areas as string[])
+        .map((a) => a.trim())
+        .filter((a) => a.length > 0)
+    )
+  );
 
-  // Get max sortOrder
-  const lastArea = await prisma.projectArea.findFirst({
-    where: { projectId },
-    orderBy: { sortOrder: "desc" },
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, workspaceId: auth.workspaceId, deletedAt: null },
+  });
+  if (!project) return apiError("Projekt nicht gefunden", 404);
+
+  const updated = await prisma.project.update({
+    where: { id: projectId },
+    data: { areas: cleaned },
+    select: { areas: true },
   });
 
-  const area = await prisma.projectArea.create({
-    data: {
-      projectId,
-      name: name.trim(),
-      sortOrder: (lastArea?.sortOrder ?? -1) + 1,
-    },
-  });
-
-  return NextResponse.json({ area }, { status: 201 });
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ projectId: string }> }
-) {
-  const user = await getAuthUser();
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { projectId } = await params;
-  const { searchParams } = new URL(req.url);
-  const areaId = searchParams.get("areaId");
-
-  if (!areaId) {
-    return NextResponse.json({ error: "areaId query param required" }, { status: 400 });
-  }
-
-  const area = await prisma.projectArea.findFirst({
-    where: { id: areaId, projectId },
-  });
-
-  if (!area) {
-    return NextResponse.json({ error: "Area not found" }, { status: 404 });
-  }
-
-  await prisma.projectArea.delete({ where: { id: areaId } });
-
-  return NextResponse.json({ success: true });
+  return apiSuccess({ areas: updated.areas });
 }

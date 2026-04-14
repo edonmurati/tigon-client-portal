@@ -23,18 +23,18 @@ export default async function ImpulseDetailPage({
 
   // Verify project belongs to this client
   const project = await prisma.project.findFirst({
-    where: { id: projectId, clientId: user.clientId },
+    where: { id: projectId, clientId: user.clientId, deletedAt: null },
     select: { id: true, name: true },
   });
 
   if (!project) notFound();
 
   const impulse = await prisma.impulse.findFirst({
-    where: { id: impulseId, projectId },
+    where: { id: impulseId, projectId, deletedAt: null },
     include: {
-      area: { select: { id: true, name: true } },
       author: { select: { id: true, name: true, role: true } },
       comments: {
+        where: { deletedAt: null },
         include: {
           author: { select: { id: true, name: true, role: true } },
         },
@@ -64,7 +64,7 @@ export default async function ImpulseDetailPage({
           <ImpulseTypeBadge type={impulse.type} />
           <ImpulseStatusBadge status={impulse.status} />
           {impulse.area && (
-            <Badge className="bg-dark-300 text-ink-muted">{impulse.area.name}</Badge>
+            <Badge className="bg-dark-300 text-ink-muted">{impulse.area}</Badge>
           )}
         </div>
         <h1 className="font-serif text-3xl text-surface tracking-tightest leading-tight">

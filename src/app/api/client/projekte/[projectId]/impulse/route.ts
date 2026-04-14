@@ -23,7 +23,7 @@ export async function GET(
   const { projectId } = await params;
 
   const project = await prisma.project.findFirst({
-    where: { id: projectId, clientId: user.clientId },
+    where: { id: projectId, clientId: user.clientId, deletedAt: null },
     select: { id: true },
   });
 
@@ -37,9 +37,10 @@ export async function GET(
 
   const where: {
     projectId: string;
+    deletedAt: null;
     type?: ImpulseType;
     status?: ImpulseStatus;
-  } = { projectId };
+  } = { projectId, deletedAt: null };
 
   if (typeParam && VALID_TYPES.includes(typeParam as ImpulseType)) {
     where.type = typeParam as ImpulseType;
@@ -51,7 +52,6 @@ export async function GET(
   const impulses = await prisma.impulse.findMany({
     where,
     include: {
-      area: { select: { id: true, name: true } },
       author: { select: { name: true } },
       _count: { select: { comments: true } },
     },
@@ -78,8 +78,8 @@ export async function POST(
   const { projectId } = await params;
 
   const project = await prisma.project.findFirst({
-    where: { id: projectId, clientId: user.clientId },
-    select: { id: true, name: true },
+    where: { id: projectId, clientId: user.clientId, deletedAt: null },
+    select: { id: true, name: true, areas: true },
   });
 
   if (!project) {
@@ -93,11 +93,11 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { type, title, content, projectAreaId } = body as {
+  const { type, title, content, area } = body as {
     type?: string;
     title?: string;
     content?: string;
-    projectAreaId?: string;
+    area?: string;
   };
 
   if (!type || !VALID_TYPES.includes(type as ImpulseType)) {
@@ -110,15 +110,9 @@ export async function POST(
     return NextResponse.json({ error: "Content required" }, { status: 400 });
   }
 
-  // Validate area belongs to project if provided
-  if (projectAreaId) {
-    const area = await prisma.projectArea.findFirst({
-      where: { id: projectAreaId, projectId: project.id },
-      select: { id: true },
-    });
-    if (!area) {
-      return NextResponse.json({ error: "Area not found" }, { status: 400 });
-    }
+  const normalizedArea = area?.trim() || null;
+  if (normalizedArea && !project.areas.includes(normalizedArea)) {
+    return NextResponse.json({ error: "Area not found" }, { status: 400 });
   }
 
   const impulse = await prisma.impulse.create({
@@ -128,7 +122,7 @@ export async function POST(
       type: type as ImpulseType,
       title: title.trim(),
       content: content.trim(),
-      projectAreaId: projectAreaId || null,
+      area: normalizedArea,
     },
   });
 

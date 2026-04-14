@@ -3,6 +3,28 @@ import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { saveFile } from "@/lib/storage";
 import { logActivity } from "@/lib/activity";
+import { assertClientInWorkspace, assertProjectInWorkspace } from "@/lib/api";
+import type { DocumentCategory } from "@/generated/prisma";
+
+const VALID_CATEGORIES: DocumentCategory[] = [
+  "CONTRACT",
+  "INVOICE",
+  "PROPOSAL",
+  "BRIEFING",
+  "SCREENSHOT",
+  "DIAGRAM",
+  "LEGAL",
+  "AVV",
+  "DPA",
+  "OTHER",
+];
+
+function parseCategory(value: string | null | undefined): DocumentCategory | null {
+  if (!value) return null;
+  return VALID_CATEGORIES.includes(value as DocumentCategory)
+    ? (value as DocumentCategory)
+    : null;
+}
 
 export async function GET(req: NextRequest) {
   const user = await getAuthUser();
@@ -15,11 +37,15 @@ export async function GET(req: NextRequest) {
   const projectId = searchParams.get("projectId");
   const category = searchParams.get("category");
 
+  const categoryFilter = parseCategory(category);
+
   const documents = await prisma.document.findMany({
     where: {
+      workspaceId: user.workspaceId,
+      deletedAt: null,
       ...(clientId ? { clientId } : {}),
       ...(projectId ? { projectId } : {}),
-      ...(category ? { category } : {}),
+      ...(categoryFilter ? { category: categoryFilter } : {}),
     },
     include: {
       client: { select: { id: true, name: true } },
@@ -55,6 +81,11 @@ export async function POST(req: NextRequest) {
   const category = formData.get("category") as string | null;
   const displayName = formData.get("displayName") as string | null;
 
+  const clientCheck = await assertClientInWorkspace(clientId, user.workspaceId);
+  if (clientCheck) return clientCheck;
+  const projectCheck = await assertProjectInWorkspace(projectId, user.workspaceId);
+  if (projectCheck) return projectCheck;
+
   const buffer = Buffer.from(await file.arrayBuffer());
   const targetDir = clientId ? `clients/${clientId}` : "general";
 
@@ -69,12 +100,13 @@ export async function POST(req: NextRequest) {
 
   const document = await prisma.document.create({
     data: {
+      workspaceId: user.workspaceId,
       name: file.name,
       displayName: displayName?.trim() || null,
       mimeType: file.type || "application/octet-stream",
       sizeBytes,
       storagePath,
-      category: category?.trim() || null,
+      category: parseCategory(category) ?? "OTHER",
       clientId: clientId || null,
       projectId: projectId || null,
       uploadedById: user.id,
@@ -87,12 +119,16 @@ export async function POST(req: NextRequest) {
   });
 
   logActivity({
-    userId: user.id,
-    action: "UPLOAD",
-    entityType: "Document",
-    entityId: document.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "CREATED",
     clientId: clientId || undefined,
-    meta: { name: file.name, sizeBytes, category: category || undefined },
+    projectId: document.projectId ?? undefined,
+    subject: `Dokument hochgeladen: ${file.name}`,
+    summary: category || undefined,
+    changes: { sizeBytes },
+    tags: ["document"],
   });
 
   return NextResponse.json({ document }, { status: 201 });

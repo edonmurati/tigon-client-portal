@@ -19,16 +19,23 @@ interface ActivityFiltersProps {
   users: AdminUser[];
 }
 
-const entityTypeOptions = [
+const kindOptions = [
   { value: "", label: "Alle Typen" },
-  { value: "Credential", label: "Zugangsdaten" },
-  { value: "Document", label: "Dokumente" },
-  { value: "Note", label: "Notizen" },
-  { value: "ContactPerson", label: "Kontakte" },
-  { value: "ServerEntry", label: "Server" },
-  { value: "Impulse", label: "Impulse" },
-  { value: "Client", label: "Kunden" },
-  { value: "Project", label: "Projekte" },
+  { value: "CREATED", label: "Erstellt" },
+  { value: "UPDATED", label: "Aktualisiert" },
+  { value: "DELETED", label: "Geloescht" },
+  { value: "STATUS_CHANGED", label: "Status geaendert" },
+  { value: "NOTE", label: "Notiz" },
+  { value: "MEETING", label: "Meeting" },
+  { value: "CALL", label: "Call" },
+  { value: "EMAIL", label: "Email" },
+  { value: "WHATSAPP", label: "WhatsApp" },
+  { value: "OUTREACH_SENT", label: "Outreach gesendet" },
+  { value: "OUTREACH_REPLY", label: "Outreach Antwort" },
+  { value: "IMPULSE_ACCEPTED", label: "Impuls akzeptiert" },
+  { value: "IMPULSE_RESOLVED", label: "Impuls geloest" },
+  { value: "MILESTONE_REACHED", label: "Meilenstein erreicht" },
+  { value: "DEPLOYED", label: "Deployed" },
 ];
 
 const selectClass =
@@ -40,7 +47,7 @@ export function ActivityFilters({ clients, users }: ActivityFiltersProps) {
   const searchParams = useSearchParams();
 
   const currentClientId = searchParams.get("clientId") ?? "";
-  const currentEntityType = searchParams.get("entityType") ?? "";
+  const currentKind = searchParams.get("kind") ?? "";
   const currentUserId = searchParams.get("userId") ?? "";
 
   const updateFilter = useCallback(
@@ -56,11 +63,10 @@ export function ActivityFilters({ clients, users }: ActivityFiltersProps) {
     [router, pathname, searchParams]
   );
 
-  const hasActiveFilters = currentClientId || currentEntityType || currentUserId;
+  const hasActiveFilters = currentClientId || currentKind || currentUserId;
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Client filter */}
       <select
         className={selectClass}
         value={currentClientId}
@@ -76,20 +82,18 @@ export function ActivityFilters({ clients, users }: ActivityFiltersProps) {
         ))}
       </select>
 
-      {/* Entity type filter */}
       <select
         className={selectClass}
-        value={currentEntityType}
-        onChange={(e) => updateFilter("entityType", e.target.value)}
+        value={currentKind}
+        onChange={(e) => updateFilter("kind", e.target.value)}
       >
-        {entityTypeOptions.map((o) => (
+        {kindOptions.map((o) => (
           <option key={o.value} value={o.value} className="bg-dark-200">
             {o.label}
           </option>
         ))}
       </select>
 
-      {/* User filter */}
       <select
         className={selectClass}
         value={currentUserId}
@@ -105,7 +109,6 @@ export function ActivityFilters({ clients, users }: ActivityFiltersProps) {
         ))}
       </select>
 
-      {/* Clear filters */}
       {hasActiveFilters && (
         <button
           onClick={() => router.push(pathname)}
@@ -114,7 +117,7 @@ export function ActivityFilters({ clients, users }: ActivityFiltersProps) {
             "border border-border/50 rounded-lg hover:border-border"
           )}
         >
-          Filter zurücksetzen
+          Filter zuruecksetzen
         </button>
       )}
     </div>

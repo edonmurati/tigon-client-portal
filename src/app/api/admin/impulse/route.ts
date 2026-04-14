@@ -19,15 +19,12 @@ export async function GET(req: NextRequest) {
 
   const impulses = await prisma.impulse.findMany({
     where: {
+      project: {
+        workspaceId: user.workspaceId,
+        ...(clientId ? { clientId } : {}),
+      },
       ...(status && validStatuses.includes(status) ? { status } : {}),
       ...(type && validTypes.includes(type) ? { type } : {}),
-      ...(clientId
-        ? {
-            project: {
-              clientId,
-            },
-          }
-        : {}),
     },
     include: {
       project: {

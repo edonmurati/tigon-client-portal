@@ -19,18 +19,13 @@ export async function GET(
   const { projectId } = await params;
 
   const project = await prisma.project.findFirst({
-    where: { id: projectId, clientId: user.clientId },
+    where: { id: projectId, clientId: user.clientId, deletedAt: null },
     include: {
-      areas: {
-        include: {
-          _count: { select: { impulses: true } },
-        },
-        orderBy: { sortOrder: "asc" },
-      },
       milestones: {
         orderBy: { sortOrder: "asc" },
       },
       impulses: {
+        where: { deletedAt: null },
         select: {
           id: true,
           title: true,
@@ -48,5 +43,11 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ project });
+  const impulseCountsByArea = await prisma.impulse.groupBy({
+    by: ["area"],
+    where: { projectId: project.id, area: { not: null } },
+    _count: { _all: true },
+  });
+
+  return NextResponse.json({ project, impulseCountsByArea });
 }

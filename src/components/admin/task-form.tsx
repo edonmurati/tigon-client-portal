@@ -17,7 +17,7 @@ interface InitialData {
   title: string;
   description: string | null;
   priority: TaskPriority;
-  assigneeId: string | null;
+  assigneeIds: string[];
   clientId: string | null;
   projectId: string | null;
   dueDate: string | null;
@@ -47,11 +47,17 @@ export function TaskForm({ taskId, initialData, clients, projects, admins }: Pro
   const [title, setTitle] = useState(initialData.title);
   const [description, setDescription] = useState(initialData.description ?? "");
   const [priority, setPriority] = useState<TaskPriority>(initialData.priority);
-  const [assigneeId, setAssigneeId] = useState(initialData.assigneeId ?? "");
+  const [assigneeIds, setAssigneeIds] = useState<string[]>(initialData.assigneeIds);
   const [clientId, setClientId] = useState(initialData.clientId ?? "");
   const [projectId, setProjectId] = useState(initialData.projectId ?? "");
   const [dueDate, setDueDate] = useState(toDateInput(initialData.dueDate));
   const [completed, setCompleted] = useState(!!initialData.completedAt);
+
+  function toggleAssignee(id: string) {
+    setAssigneeIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
 
   const visibleProjects = clientId
     ? projects.filter((p) => p.clientId === clientId)
@@ -66,7 +72,7 @@ export function TaskForm({ taskId, initialData, clients, projects, admins }: Pro
       title: title.trim(),
       description: description.trim() ? description : null,
       priority,
-      assigneeId: assigneeId || null,
+      assigneeIds,
       clientId: clientId || null,
       projectId: projectId || null,
       dueDate: dueDate ? new Date(dueDate).toISOString() : null,
@@ -183,22 +189,32 @@ export function TaskForm({ taskId, initialData, clients, projects, admins }: Pro
             />
           </div>
 
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-xs font-medium text-ink-muted uppercase tracking-widest mb-2">
-              Assignee
+              Assignees
             </label>
-            <select
-              value={assigneeId}
-              onChange={(e) => setAssigneeId(e.target.value)}
-              className="w-full bg-dark-200 border border-border rounded-xl px-3 py-2 text-sm text-surface focus:border-accent outline-none"
-            >
-              <option value="">Niemand</option>
-              {admins.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-wrap gap-2">
+              {admins.map((a) => {
+                const active = assigneeIds.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => toggleAssignee(a.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                      active
+                        ? "bg-accent/20 border-accent text-surface"
+                        : "bg-dark-200 border-border text-ink-muted hover:text-surface"
+                    }`}
+                  >
+                    {a.name}
+                  </button>
+                );
+              })}
+              {admins.length === 0 && (
+                <span className="text-xs text-ink-muted">Keine Admins</span>
+              )}
+            </div>
           </div>
 
           <div>

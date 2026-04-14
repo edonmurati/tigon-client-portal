@@ -12,6 +12,16 @@
 **Warum:** Vor Production muss der Schema-Pfad deterministisch sein. `db push` kann Daten verlieren bei Non-Additive Changes und hat keine History. `migrate deploy` mit commited Migration-Files ist reproduzierbar und rollback-faehig.
 **Alternativen:** `db push` beibehalten bis vor Production — verworfen, weil Staging dann strukturell anders als Production setup ist und wir Migration-Kompatibilitaet nicht testen.
 
+## 2026-04-13: Komplett-Redesign — Portal als operatives OS fuer Tigon
+**Warum:** Das Portal soll Source-of-Truth fuer alle operativen Business-Daten werden (Kunden, Projekte, Tasks, Impulse, Finanzen, Outreach, Aktivitaeten). `~/tigon/` Markdown-Dateien werden (wo strukturiert sinnvoll) in die DB migriert. HABIT-Layer-Content (Playbooks, Research, Skills, Shared-Insights, Meeting-Markdowns) bleibt File-basiert — das ist Jarvis-Wissen, keine operative Daten.
+**Modell:** Source-of-Truth Mode B — DB ist primaer, naechtlicher Read-Only-Export nach `~/tigon/_export/` fuer Grep-Zugriff.
+**Scope:** Workspace → Client/Lead/Project → Task/Impulse/Milestone/Deployment/Journal/Entry/Decision. Activity als unified Touchpoint- + Audit-Log. Financials: Invoice/LineItem/Payment/Expense/PipelineEstimate (MRR wird berechnet, nicht gespeichert).
+**Soft-Delete:** `deletedAt` auf allen Operativ-Models, `Activity` bleibt append-only, `Invoice`/`Payment` nie hard-deleten (Buchfuehrungspflicht). Unique-Constraints via Partial Index (`WHERE deletedAt IS NULL`).
+
+## 2026-04-13: Prisma 7 — `datasource.url` in `prisma.config.ts`
+**Warum:** Prisma 7 hat `url = env("DATABASE_URL")` aus der schema.prisma `datasource` entfernt. Migrate/Generate lesen die Connection-URL jetzt aus `prisma.config.ts` (`datasource.url`). Unsere fruehere Entscheidung vom selben Tag (explizit in schema.prisma) ist damit obsolet — das `prisma validate` bricht sonst.
+**Alternativen:** Bei Prisma 6 bleiben — verworfen, weil wir eh frisch aufsetzen.
+
 ## 2026-04-13: Env-File-Struktur via `.env.local` + Symlink
 **Warum:** Der `/dev` Skill erwartet `.env.local`/`.env.staging`/`.env.production` Naming. Prisma CLI liest `.env` standardmaessig — Symlink `.env -> .env.local` sorgt dafuer dass CLI und Next.js aus derselben Quelle lesen.
 **Alternativen:** dotenv-cli als Wrapper — verworfen, ist nicht ueberall installiert (siehe /dev Guardrail 8).

@@ -37,6 +37,7 @@ const statusBorderColors: Record<ServerStatus, string> = {
   DEGRADED: "border-l-yellow-500",
   OFFLINE: "border-l-red-500",
   MAINTENANCE: "border-l-blue-500",
+  DECOMMISSIONED: "border-l-ink-muted",
 };
 
 const statusDotColors: Record<ServerStatus, string> = {
@@ -44,6 +45,7 @@ const statusDotColors: Record<ServerStatus, string> = {
   DEGRADED: "bg-yellow-500",
   OFFLINE: "bg-red-500",
   MAINTENANCE: "bg-blue-500",
+  DECOMMISSIONED: "bg-ink-muted",
 };
 
 const statusDotActiveRing: Record<ServerStatus, string> = {
@@ -51,9 +53,16 @@ const statusDotActiveRing: Record<ServerStatus, string> = {
   DEGRADED: "ring-2 ring-yellow-500/40",
   OFFLINE: "ring-2 ring-red-500/40",
   MAINTENANCE: "ring-2 ring-blue-500/40",
+  DECOMMISSIONED: "ring-2 ring-ink-muted/40",
 };
 
-const ALL_STATUSES: ServerStatus[] = ["ONLINE", "DEGRADED", "OFFLINE", "MAINTENANCE"];
+const ALL_STATUSES: ServerStatus[] = [
+  "ONLINE",
+  "DEGRADED",
+  "OFFLINE",
+  "MAINTENANCE",
+  "DECOMMISSIONED",
+];
 
 export function ServerCard({ server, clients, projects, onUpdate, onDelete }: ServerCardProps) {
   const [currentStatus, setCurrentStatus] = useState<ServerStatus>(server.status);

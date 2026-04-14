@@ -15,8 +15,8 @@ export async function GET(
 
   const { documentId } = await params;
 
-  const document = await prisma.document.findUnique({
-    where: { id: documentId },
+  const document = await prisma.document.findFirst({
+    where: { id: documentId, workspaceId: user.workspaceId, deletedAt: null },
     include: {
       client: { select: { id: true, name: true } },
       project: { select: { id: true, name: true } },
@@ -42,8 +42,8 @@ export async function DELETE(
 
   const { documentId } = await params;
 
-  const document = await prisma.document.findUnique({
-    where: { id: documentId },
+  const document = await prisma.document.findFirst({
+    where: { id: documentId, workspaceId: user.workspaceId, deletedAt: null },
   });
 
   if (!document) {
@@ -55,12 +55,14 @@ export async function DELETE(
   await prisma.document.delete({ where: { id: documentId } });
 
   logActivity({
-    userId: user.id,
-    action: "DELETE",
-    entityType: "Document",
-    entityId: documentId,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "DELETED",
     clientId: document.clientId || undefined,
-    meta: { name: document.name },
+    projectId: document.projectId ?? undefined,
+    subject: `Dokument geloescht: ${document.name}`,
+    tags: ["document"],
   });
 
   return NextResponse.json({ success: true });

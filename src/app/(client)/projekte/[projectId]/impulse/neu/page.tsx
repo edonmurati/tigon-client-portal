@@ -10,11 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { Card, CardBody } from "@/components/ui/card";
 
-interface Area {
-  id: string;
-  name: string;
-}
-
 const typeOptions = [
   { value: "FEEDBACK", label: "Feedback" },
   { value: "CHANGE_REQUEST", label: "Änderungswunsch" },
@@ -29,11 +24,11 @@ export default function NewImpulsePage({
 }) {
   const router = useRouter();
   const [projectId, setProjectId] = useState<string>("");
-  const [areas, setAreas] = useState<Area[]>([]);
+  const [areas, setAreas] = useState<string[]>([]);
   const [projectName, setProjectName] = useState<string>("");
 
   const [type, setType] = useState("FEEDBACK");
-  const [areaId, setAreaId] = useState("");
+  const [area, setArea] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +75,7 @@ export default function NewImpulsePage({
             type,
             title: title.trim(),
             content: content.trim(),
-            projectAreaId: areaId || undefined,
+            area: area || undefined,
           }),
         }
       );
@@ -102,7 +97,7 @@ export default function NewImpulsePage({
 
   const areaOptions = [
     { value: "", label: "Kein Bereich" },
-    ...areas.map((a) => ({ value: a.id, label: a.name })),
+    ...areas.map((a) => ({ value: a, label: a })),
   ];
 
   return (
@@ -144,8 +139,8 @@ export default function NewImpulsePage({
               <Select
                 label="Bereich (optional)"
                 options={areaOptions}
-                value={areaId}
-                onChange={(e) => setAreaId(e.target.value)}
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
               />
             )}
 

@@ -37,15 +37,19 @@ export async function POST(
     );
   }
 
-  // Verify client exists
-  const client = await prisma.client.findUnique({ where: { id: clientId } });
+  // Verify client exists in same workspace
+  const client = await prisma.client.findFirst({
+    where: { id: clientId, workspaceId: user.workspaceId },
+  });
   if (!client) {
     return NextResponse.json({ error: "Client not found" }, { status: 404 });
   }
 
-  // Check email uniqueness
-  const existingUser = await prisma.user.findUnique({
-    where: { email: email.trim().toLowerCase() },
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      workspaceId: user.workspaceId,
+      email: email.trim().toLowerCase(),
+    },
   });
   if (existingUser) {
     return NextResponse.json(
@@ -59,6 +63,7 @@ export async function POST(
 
   const newUser = await prisma.user.create({
     data: {
+      workspaceId: user.workspaceId,
       name: name.trim(),
       email: email.trim().toLowerCase(),
       passwordHash,

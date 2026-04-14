@@ -14,18 +14,12 @@ interface PageProps {
 }
 
 const validCategories: EntryCategory[] = [
-  "CHANGELOG",
-  "DECISION",
-  "HANDOFF",
   "IDEA",
   "PLAN",
   "RESEARCH",
   "SPEC",
-  "PLAYBOOK",
-  "SOP",
   "MEETING_NOTE",
   "INSIGHT",
-  "JOURNAL",
   "OTHER",
 ];
 
@@ -45,6 +39,7 @@ export default async function WissenPage({ searchParams }: PageProps) {
   const [entries, clients] = await Promise.all([
     prisma.knowledgeEntry.findMany({
       where: {
+        deletedAt: null,
         ...(filterCategory ? { category: filterCategory } : {}),
         ...(filterClientId ? { clientId: filterClientId } : {}),
         ...(filterTag ? { tags: { has: filterTag } } : {}),

@@ -15,6 +15,8 @@ import {
 } from "@/lib/constants";
 import type { TaskPriority } from "@/generated/prisma";
 
+type Assignee = { id: string; name: string; email: string };
+
 type Task = {
   id: string;
   title: string;
@@ -22,7 +24,7 @@ type Task = {
   priority: TaskPriority;
   dueDate: string | null;
   completedAt: string | null;
-  assignee: { id: string; name: string; email: string } | null;
+  assignees: Assignee[];
   client: { id: string; name: string; stage: string } | null;
   project: { id: string; name: string } | null;
 };
@@ -59,7 +61,8 @@ export function AufgabenBoard({
   const filtered = tasks.filter((t) => {
     if (filter === "open") return !t.completedAt;
     if (filter === "done") return !!t.completedAt;
-    if (filter === "mine") return !t.completedAt && t.assignee?.id === currentUserId;
+    if (filter === "mine")
+      return !t.completedAt && t.assignees.some((a) => a.id === currentUserId);
     return true;
   });
 
@@ -312,10 +315,10 @@ export function AufgabenBoard({
                     >
                       {taskPriorityLabels[task.priority]}
                     </span>
-                    {task.assignee && (
+                    {task.assignees.length > 0 && (
                       <>
                         <span>·</span>
-                        <span>{task.assignee.name}</span>
+                        <span>{task.assignees.map((a) => a.name).join(", ")}</span>
                       </>
                     )}
                     {task.client && (

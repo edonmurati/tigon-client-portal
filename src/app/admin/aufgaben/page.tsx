@@ -9,8 +9,14 @@ export default async function AufgabenPage() {
 
   const [tasks, clients, projects, admins] = await Promise.all([
     prisma.task.findMany({
+      where: {
+        deletedAt: null,
+        project: { workspaceId: user.workspaceId, deletedAt: null },
+      },
       include: {
-        assignee: { select: { id: true, name: true, email: true } },
+        assignees: {
+          include: { user: { select: { id: true, name: true, email: true } } },
+        },
         client: { select: { id: true, name: true, stage: true } },
         project: { select: { id: true, name: true } },
       },
@@ -22,15 +28,17 @@ export default async function AufgabenPage() {
       ],
     }),
     prisma.client.findMany({
+      where: { workspaceId: user.workspaceId, deletedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.project.findMany({
+      where: { workspaceId: user.workspaceId, deletedAt: null },
       select: { id: true, name: true, clientId: true },
       orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
-      where: { role: "ADMIN" },
+      where: { workspaceId: user.workspaceId, role: "ADMIN", deletedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -38,6 +46,7 @@ export default async function AufgabenPage() {
 
   const serializedTasks = tasks.map((t) => ({
     ...t,
+    assignees: t.assignees.map((a) => a.user),
     dueDate: t.dueDate ? t.dueDate.toISOString() : null,
     completedAt: t.completedAt ? t.completedAt.toISOString() : null,
   }));

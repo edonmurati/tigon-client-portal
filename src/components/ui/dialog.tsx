@@ -41,7 +41,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
@@ -49,11 +49,11 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
       <div className="absolute inset-0 bg-dark/80 backdrop-blur-sm" />
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg bg-dark-100 border border-border rounded-xl shadow-2xl",
+          "relative z-10 w-full max-w-lg bg-dark-100 border border-border rounded-xl shadow-2xl flex flex-col max-h-[calc(100vh-2rem)]",
           className
         )}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <h3 className="text-sm font-medium text-surface">{title}</h3>
           <button
             onClick={onClose}
@@ -62,7 +62,7 @@ export function Dialog({ open, onClose, title, children, className }: DialogProp
             <X size={16} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-5 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

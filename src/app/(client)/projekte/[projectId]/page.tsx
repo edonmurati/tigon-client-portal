@@ -22,14 +22,8 @@ export default async function ProjectDetailPage({
   const { projectId } = await params;
 
   const project = await prisma.project.findFirst({
-    where: { id: projectId, clientId: user.clientId },
+    where: { id: projectId, clientId: user.clientId, deletedAt: null },
     include: {
-      areas: {
-        include: {
-          _count: { select: { impulses: true } },
-        },
-        orderBy: { sortOrder: "asc" },
-      },
       milestones: {
         orderBy: { sortOrder: "asc" },
       },
@@ -38,6 +32,15 @@ export default async function ProjectDetailPage({
   });
 
   if (!project) notFound();
+
+  const impulseCountsByArea = await prisma.impulse.groupBy({
+    by: ["area"],
+    where: { projectId: project.id, area: { not: null } },
+    _count: { _all: true },
+  });
+  const areaCountMap = new Map(
+    impulseCountsByArea.map((row) => [row.area ?? "", row._count._all])
+  );
 
   const completedMilestones = project.milestones.filter((m) => m.completedAt !== null);
   const upcomingMilestones = project.milestones.filter((m) => m.completedAt === null);
@@ -89,14 +92,14 @@ export default async function ProjectDetailPage({
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {project.areas.map((area) => (
-              <Link key={area.id} href={`/projekte/${project.id}/impulse?areaId=${area.id}`}>
+              <Link key={area} href={`/projekte/${project.id}/impulse?area=${encodeURIComponent(area)}`}>
                 <Card variant="interactive">
                   <CardBody className="py-4">
                     <div className="flex items-center gap-2 mb-1">
                       <Layers className="w-4 h-4 text-accent shrink-0" />
-                      <p className="text-sm font-medium text-surface truncate">{area.name}</p>
+                      <p className="text-sm font-medium text-surface truncate">{area}</p>
                     </div>
-                    <p className="text-xs text-ink-muted">{area._count.impulses} Impulse</p>
+                    <p className="text-xs text-ink-muted">{areaCountMap.get(area) ?? 0} Impulse</p>
                   </CardBody>
                 </Card>
               </Link>

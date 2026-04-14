@@ -9,6 +9,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: Role;
+  workspaceId: string;
   clientId: string | null;
   clientName: string | null;
 }
@@ -109,6 +110,7 @@ export async function getAuthUser(): Promise<AuthUser | null> {
       name: dbUser.name,
       email: dbUser.email,
       role: dbUser.role,
+      workspaceId: dbUser.workspaceId,
       clientId: dbUser.clientId,
       clientName: dbUser.client?.name ?? null,
     };
