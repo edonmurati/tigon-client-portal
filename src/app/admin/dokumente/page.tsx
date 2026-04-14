@@ -4,6 +4,20 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus, Files } from "lucide-react";
 import { DocumentList } from "@/components/admin/document-list";
+import type { DocumentCategory } from "@/generated/prisma";
+
+const VALID_CATEGORIES: DocumentCategory[] = [
+  "CONTRACT",
+  "INVOICE",
+  "PROPOSAL",
+  "BRIEFING",
+  "SCREENSHOT",
+  "DIAGRAM",
+  "LEGAL",
+  "AVV",
+  "DPA",
+  "OTHER",
+];
 
 export default async function DokumentePage({
   searchParams,
@@ -14,12 +28,17 @@ export default async function DokumentePage({
   if (!user || user.role !== "ADMIN") redirect("/login");
 
   const { clientId, category } = await searchParams;
+  const categoryFilter =
+    category && VALID_CATEGORIES.includes(category as DocumentCategory)
+      ? (category as DocumentCategory)
+      : undefined;
 
   const [documents, clients, categories] = await Promise.all([
     prisma.document.findMany({
       where: {
+        deletedAt: null,
         ...(clientId ? { clientId } : {}),
-        ...(category ? { category } : {}),
+        ...(categoryFilter ? { category: categoryFilter } : {}),
       },
       include: {
         client: { select: { id: true, name: true } },
@@ -34,15 +53,13 @@ export default async function DokumentePage({
     }),
     prisma.document.findMany({
       select: { category: true },
-      where: { category: { not: null } },
+      where: { deletedAt: null },
       distinct: ["category"],
       orderBy: { category: "asc" },
     }),
   ]);
 
-  const distinctCategories = categories
-    .map((d) => d.category)
-    .filter((c): c is string => c !== null);
+  const distinctCategories: DocumentCategory[] = categories.map((d) => d.category);
 
   return (
     <div className="p-6 lg:p-8">

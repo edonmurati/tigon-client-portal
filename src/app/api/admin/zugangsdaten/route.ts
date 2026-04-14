@@ -5,6 +5,17 @@ import { encrypt } from "@/lib/vault";
 import { logActivity } from "@/lib/activity";
 import type { CredentialType } from "@/generated/prisma";
 
+const VALID_CREDENTIAL_TYPES: CredentialType[] = [
+  "LOGIN",
+  "API_KEY",
+  "ENV_VARIABLE",
+  "SSH_KEY",
+  "DATABASE",
+  "TOKEN",
+  "CERTIFICATE",
+  "OTHER",
+];
+
 export async function GET(req: NextRequest) {
   const user = await getAuthUser();
   if (!user || user.role !== "ADMIN") {
@@ -17,6 +28,8 @@ export async function GET(req: NextRequest) {
 
   const credentials = await prisma.credential.findMany({
     where: {
+      workspaceId: user.workspaceId,
+      deletedAt: null,
       ...(clientId ? { clientId } : {}),
       ...(projectId ? { projectId } : {}),
     },
@@ -69,8 +82,11 @@ export async function POST(req: NextRequest) {
   if (!label || typeof label !== "string" || label.trim().length === 0) {
     return NextResponse.json({ error: "Label is required" }, { status: 400 });
   }
-  if (!type) {
-    return NextResponse.json({ error: "Type is required" }, { status: 400 });
+  if (!type || !VALID_CREDENTIAL_TYPES.includes(type)) {
+    return NextResponse.json(
+      { error: `Invalid type. Must be one of: ${VALID_CREDENTIAL_TYPES.join(", ")}` },
+      { status: 400 }
+    );
   }
   if (!value || typeof value !== "string" || value.trim().length === 0) {
     return NextResponse.json({ error: "Value is required" }, { status: 400 });
@@ -80,6 +96,7 @@ export async function POST(req: NextRequest) {
 
   const credential = await prisma.credential.create({
     data: {
+      workspaceId: user.workspaceId,
       label: label.trim(),
       type,
       url: url?.trim() || null,
@@ -108,12 +125,15 @@ export async function POST(req: NextRequest) {
   });
 
   logActivity({
-    userId: user.id,
-    action: "credential.create",
-    entityType: "Credential",
-    entityId: credential.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "CREATED",
     clientId: credential.clientId ?? undefined,
-    meta: { label: credential.label, type: credential.type },
+    projectId: credential.projectId ?? undefined,
+    subject: `Zugangsdaten erstellt: ${credential.label}`,
+    summary: credential.type,
+    tags: ["credential"],
   });
 
   return NextResponse.json({ credential }, { status: 201 });

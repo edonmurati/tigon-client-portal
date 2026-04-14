@@ -13,6 +13,14 @@ export async function GET(
 
   const { projectId } = await params;
 
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, workspaceId: user.workspaceId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!project) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
   const milestones = await prisma.milestone.findMany({
     where: { projectId },
     orderBy: { sortOrder: "asc" },
@@ -44,8 +52,10 @@ export async function POST(
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
 
-  // Verify project exists
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  // Verify project exists in same workspace
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, workspaceId: user.workspaceId, deletedAt: null },
+  });
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
@@ -96,7 +106,11 @@ export async function PATCH(
   }
 
   const milestone = await prisma.milestone.findFirst({
-    where: { id: milestoneId, projectId },
+    where: {
+      id: milestoneId,
+      projectId,
+      project: { workspaceId: user.workspaceId, deletedAt: null },
+    },
   });
 
   if (!milestone) {
@@ -143,7 +157,11 @@ export async function DELETE(
   }
 
   const milestone = await prisma.milestone.findFirst({
-    where: { id: milestoneId, projectId },
+    where: {
+      id: milestoneId,
+      projectId,
+      project: { workspaceId: user.workspaceId, deletedAt: null },
+    },
   });
 
   if (!milestone) {

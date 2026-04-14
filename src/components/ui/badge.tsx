@@ -24,6 +24,8 @@ const statusColors: Record<ImpulseStatus, string> = {
   NEW: "bg-accent/20 text-accent",
   SEEN: "bg-blue-500/20 text-blue-400",
   IN_PROGRESS: "bg-yellow-500/20 text-yellow-400",
+  ACCEPTED: "bg-cyan-500/20 text-cyan-400",
+  REJECTED: "bg-red-500/20 text-red-400",
   DONE: "bg-green-500/20 text-green-400",
 };
 
@@ -31,6 +33,8 @@ const statusLabels: Record<ImpulseStatus, string> = {
   NEW: "Neu",
   SEEN: "Gesehen",
   IN_PROGRESS: "In Bearbeitung",
+  ACCEPTED: "Angenommen",
+  REJECTED: "Abgelehnt",
   DONE: "Erledigt",
 };
 
@@ -86,6 +90,8 @@ const credentialTypeColors: Record<CredentialType, string> = {
   ENV_VARIABLE: "bg-yellow-500/20 text-yellow-400",
   SSH_KEY: "bg-green-500/20 text-green-400",
   DATABASE: "bg-orange-500/20 text-orange-400",
+  TOKEN: "bg-indigo-500/20 text-indigo-400",
+  CERTIFICATE: "bg-emerald-500/20 text-emerald-400",
   OTHER: "bg-dark-300 text-ink-muted",
 };
 
@@ -95,6 +101,8 @@ const credentialTypeLabels: Record<CredentialType, string> = {
   ENV_VARIABLE: "Env Var",
   SSH_KEY: "SSH Key",
   DATABASE: "Datenbank",
+  TOKEN: "Token",
+  CERTIFICATE: "Zertifikat",
   OTHER: "Sonstige",
 };
 
@@ -109,6 +117,7 @@ const serverStatusColors: Record<ServerStatus, string> = {
   DEGRADED: "bg-yellow-500/20 text-yellow-400",
   OFFLINE: "bg-red-500/20 text-red-400",
   MAINTENANCE: "bg-blue-500/20 text-blue-400",
+  DECOMMISSIONED: "bg-dark-300 text-ink-muted",
 };
 
 const serverStatusLabels: Record<ServerStatus, string> = {
@@ -116,6 +125,7 @@ const serverStatusLabels: Record<ServerStatus, string> = {
   DEGRADED: "Eingeschränkt",
   OFFLINE: "Offline",
   MAINTENANCE: "Wartung",
+  DECOMMISSIONED: "Stillgelegt",
 };
 
 export function ServerStatusBadge({ status }: { status: ServerStatus }) {
@@ -125,34 +135,22 @@ export function ServerStatusBadge({ status }: { status: ServerStatus }) {
 }
 
 const entryCategoryColors: Record<EntryCategory, string> = {
-  CHANGELOG: "bg-blue-500/20 text-blue-400",
-  DECISION: "bg-purple-500/20 text-purple-400",
-  HANDOFF: "bg-orange-500/20 text-orange-400",
   IDEA: "bg-pink-500/20 text-pink-400",
   PLAN: "bg-cyan-500/20 text-cyan-400",
   RESEARCH: "bg-yellow-500/20 text-yellow-400",
   SPEC: "bg-indigo-500/20 text-indigo-400",
-  PLAYBOOK: "bg-green-500/20 text-green-400",
-  SOP: "bg-emerald-500/20 text-emerald-400",
   MEETING_NOTE: "bg-purple-500/20 text-purple-400",
   INSIGHT: "bg-accent/20 text-accent",
-  JOURNAL: "bg-dark-300 text-ink-muted",
   OTHER: "bg-dark-300 text-ink-muted",
 };
 
 const entryCategoryLabels: Record<EntryCategory, string> = {
-  CHANGELOG: "Changelog",
-  DECISION: "Entscheidung",
-  HANDOFF: "Handoff",
   IDEA: "Idee",
   PLAN: "Plan",
   RESEARCH: "Research",
   SPEC: "Spec",
-  PLAYBOOK: "Playbook",
-  SOP: "SOP",
   MEETING_NOTE: "Meeting",
   INSIGHT: "Insight",
-  JOURNAL: "Journal",
   OTHER: "Sonstige",
 };
 

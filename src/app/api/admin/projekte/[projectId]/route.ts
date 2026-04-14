@@ -16,19 +16,17 @@ export async function GET(
 
   const { projectId } = await params;
 
-  const project = await prisma.project.findUnique({
-    where: { id: projectId },
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, workspaceId: user.workspaceId, deletedAt: null },
     include: {
       client: {
         select: { id: true, name: true, slug: true },
-      },
-      areas: {
-        orderBy: { sortOrder: "asc" },
       },
       milestones: {
         orderBy: { sortOrder: "asc" },
       },
       impulses: {
+        where: { deletedAt: null },
         include: {
           author: {
             select: { id: true, name: true },
@@ -76,6 +74,14 @@ export async function PATCH(
 
   if (body.status && !validStatuses.includes(body.status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  const existing = await prisma.project.findFirst({
+    where: { id: projectId, workspaceId: user.workspaceId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
   const project = await prisma.project.update({

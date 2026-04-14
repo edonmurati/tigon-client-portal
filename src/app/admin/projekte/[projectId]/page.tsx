@@ -43,13 +43,11 @@ export default async function ProjektDetailPage({ params }: PageProps) {
       client: {
         select: { id: true, name: true, slug: true },
       },
-      areas: {
-        orderBy: { sortOrder: "asc" },
-      },
       milestones: {
         orderBy: { sortOrder: "asc" },
       },
       impulses: {
+        where: { deletedAt: null },
         include: {
           author: {
             select: { id: true, name: true },
@@ -68,12 +66,12 @@ export default async function ProjektDetailPage({ params }: PageProps) {
   // Fetch V2 CRM data
   const [notes, credentials, documents] = await Promise.all([
     prisma.knowledgeEntry.findMany({
-      where: { projectId },
+      where: { projectId, deletedAt: null },
       include: { author: { select: { id: true, name: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.credential.findMany({
-      where: { projectId },
+      where: { projectId, deletedAt: null },
       select: {
         id: true,
         label: true,
@@ -85,7 +83,7 @@ export default async function ProjektDetailPage({ params }: PageProps) {
       orderBy: { createdAt: "desc" },
     }),
     prisma.document.findMany({
-      where: { projectId },
+      where: { projectId, deletedAt: null },
       select: {
         id: true,
         name: true,

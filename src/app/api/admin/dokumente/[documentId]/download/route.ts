@@ -15,8 +15,8 @@ export async function GET(
 
   const { documentId } = await params;
 
-  const document = await prisma.document.findUnique({
-    where: { id: documentId },
+  const document = await prisma.document.findFirst({
+    where: { id: documentId, workspaceId: user.workspaceId, deletedAt: null },
   });
 
   if (!document) {

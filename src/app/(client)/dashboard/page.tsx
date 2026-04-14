@@ -17,9 +17,8 @@ export default async function DashboardPage() {
 
   const [projects, recentImpulses] = await Promise.all([
     prisma.project.findMany({
-      where: { clientId: user.clientId },
+      where: { clientId: user.clientId, deletedAt: null },
       include: {
-        areas: { select: { id: true } },
         _count: {
           select: {
             impulses: { where: { status: { not: "DONE" } } },
@@ -30,7 +29,7 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.impulse.findMany({
-      where: { project: { clientId: user.clientId } },
+      where: { project: { clientId: user.clientId, deletedAt: null } },
       select: {
         id: true,
         title: true,

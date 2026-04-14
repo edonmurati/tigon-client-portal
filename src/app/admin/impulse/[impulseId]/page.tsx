@@ -39,9 +39,6 @@ export default async function ImpulseDetailPage({ params }: PageProps) {
       author: {
         select: { id: true, name: true, email: true },
       },
-      area: {
-        select: { id: true, name: true },
-      },
       comments: {
         include: {
           author: {
@@ -127,7 +124,7 @@ export default async function ImpulseDetailPage({ params }: PageProps) {
       {impulse.area && (
         <div className="mb-6">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-dark-300 border border-border text-ink-muted">
-            Bereich: {impulse.area.name}
+            Bereich: {impulse.area}
           </span>
         </div>
       )}

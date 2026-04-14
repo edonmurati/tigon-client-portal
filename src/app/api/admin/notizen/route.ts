@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
 
   const entries = await prisma.knowledgeEntry.findMany({
     where: {
+      workspaceId: user.workspaceId,
       ...(clientId ? { clientId } : {}),
       ...(projectId ? { projectId } : {}),
     },
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
 
   const entry = await prisma.knowledgeEntry.create({
     data: {
+      workspaceId: user.workspaceId,
       clientId: clientId ?? null,
       projectId: projectId ?? null,
       authorId: user.id,
@@ -61,12 +63,15 @@ export async function POST(req: NextRequest) {
   });
 
   logActivity({
-    userId: user.id,
-    action: "CREATE",
-    entityType: "KnowledgeEntry",
-    entityId: entry.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "CREATED",
     clientId: clientId ?? undefined,
-    meta: { title: entry.title, category: entry.category },
+    projectId: projectId ?? undefined,
+    subject: `Eintrag erstellt: ${entry.title}`,
+    summary: entry.category,
+    tags: ["knowledge-entry"],
   });
 
   return apiSuccess({ entry }, 201);

@@ -7,6 +7,7 @@ import {
   parseBody,
   isParseError,
   apiSuccess,
+  apiError,
 } from "@/lib/api";
 import { createTaskSchema } from "@/lib/validations/task";
 
@@ -22,7 +23,9 @@ export async function GET(req: NextRequest) {
 
   const tasks = await prisma.task.findMany({
     where: {
-      ...(assigneeId ? { assigneeId } : {}),
+      deletedAt: null,
+      project: { workspaceId: auth.workspaceId, deletedAt: null },
+      ...(assigneeId ? { assignees: { some: { userId: assigneeId } } } : {}),
       ...(clientId ? { clientId } : {}),
       ...(projectId ? { projectId } : {}),
       ...(scope === "done"
@@ -32,7 +35,9 @@ export async function GET(req: NextRequest) {
           : { completedAt: null }),
     },
     include: {
-      assignee: { select: { id: true, name: true, email: true } },
+      assignees: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
       client: { select: { id: true, name: true, stage: true } },
       project: { select: { id: true, name: true } },
     },
@@ -44,7 +49,9 @@ export async function GET(req: NextRequest) {
     ],
   });
 
-  return apiSuccess({ tasks });
+  return apiSuccess({
+    tasks: tasks.map((t) => ({ ...t, assignees: t.assignees.map((a) => a.user) })),
+  });
 }
 
 export async function POST(req: NextRequest) {
@@ -54,31 +61,63 @@ export async function POST(req: NextRequest) {
   const body = await parseBody(req, createTaskSchema);
   if (isParseError(body)) return body;
 
+  if (!body.projectId) {
+    return apiError("projectId ist erforderlich", 400);
+  }
+
+  const project = await prisma.project.findFirst({
+    where: {
+      id: body.projectId,
+      workspaceId: auth.workspaceId,
+      deletedAt: null,
+    },
+    select: { id: true },
+  });
+  if (!project) return apiError("Projekt nicht gefunden", 404);
+
+  const assigneeIds =
+    body.assigneeIds && body.assigneeIds.length > 0
+      ? body.assigneeIds
+      : body.assigneeId
+        ? [body.assigneeId]
+        : [];
+
   const task = await prisma.task.create({
     data: {
       title: body.title,
       description: body.description ?? null,
-      assigneeId: body.assigneeId ?? null,
       clientId: body.clientId ?? null,
-      projectId: body.projectId ?? null,
+      projectId: body.projectId,
       priority: body.priority ?? "NORMAL",
       dueDate: body.dueDate && body.dueDate !== "" ? new Date(body.dueDate) : null,
+      ...(assigneeIds.length > 0
+        ? { assignees: { create: assigneeIds.map((userId) => ({ userId })) } }
+        : {}),
     },
     include: {
-      assignee: { select: { id: true, name: true, email: true } },
+      assignees: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
       client: { select: { id: true, name: true, stage: true } },
       project: { select: { id: true, name: true } },
     },
   });
 
   logActivity({
-    userId: auth.id,
-    action: "CREATE",
-    entityType: "Task",
-    entityId: task.id,
-    clientId: body.clientId,
-    meta: { title: task.title, priority: task.priority },
+    workspaceId: auth.workspaceId,
+    actorId: auth.id,
+    actorName: auth.name,
+    kind: "CREATED",
+    clientId: body.clientId ?? undefined,
+    projectId: task.projectId ?? undefined,
+    taskId: task.id,
+    subject: `Aufgabe erstellt: ${task.title}`,
+    summary: task.priority,
+    tags: ["task"],
   });
 
-  return apiSuccess({ task }, 201);
+  return apiSuccess(
+    { task: { ...task, assignees: task.assignees.map((a) => a.user) } },
+    201
+  );
 }

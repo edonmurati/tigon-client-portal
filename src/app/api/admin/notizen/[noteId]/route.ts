@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
 import { apiSuccess, isParseError, parseBody } from "@/lib/api";
 import { updateEntrySchema } from "@/lib/validations/knowledge";
+import type { Prisma } from "@/generated/prisma";
 
 export async function GET(
   _req: NextRequest,
@@ -16,8 +17,8 @@ export async function GET(
 
   const { noteId } = await params;
 
-  const entry = await prisma.knowledgeEntry.findUnique({
-    where: { id: noteId },
+  const entry = await prisma.knowledgeEntry.findFirst({
+    where: { id: noteId, workspaceId: user.workspaceId },
     include: {
       author: {
         select: { id: true, name: true },
@@ -46,22 +47,25 @@ export async function PATCH(
   const parsed = await parseBody(req, updateEntrySchema);
   if (isParseError(parsed)) return parsed;
 
-  const existing = await prisma.knowledgeEntry.findUnique({ where: { id: noteId } });
+  const existing = await prisma.knowledgeEntry.findFirst({
+    where: { id: noteId, workspaceId: user.workspaceId },
+  });
   if (!existing) {
     return NextResponse.json({ error: "Eintrag nicht gefunden" }, { status: 404 });
   }
 
+  const data: Prisma.KnowledgeEntryUncheckedUpdateInput = {};
+  if (parsed.category !== undefined) data.category = parsed.category;
+  if (parsed.title !== undefined) data.title = parsed.title;
+  if (parsed.content !== undefined) data.content = parsed.content;
+  if (parsed.tags !== undefined) data.tags = parsed.tags;
+  if (parsed.pinned !== undefined) data.pinned = parsed.pinned;
+  if (parsed.clientId !== undefined) data.clientId = parsed.clientId;
+  if (parsed.projectId !== undefined) data.projectId = parsed.projectId;
+
   const entry = await prisma.knowledgeEntry.update({
     where: { id: noteId },
-    data: {
-      ...(parsed.category !== undefined ? { category: parsed.category } : {}),
-      ...(parsed.title !== undefined ? { title: parsed.title } : {}),
-      ...(parsed.content !== undefined ? { content: parsed.content } : {}),
-      ...(parsed.tags !== undefined ? { tags: parsed.tags } : {}),
-      ...(parsed.pinned !== undefined ? { pinned: parsed.pinned } : {}),
-      ...(parsed.clientId !== undefined ? { clientId: parsed.clientId } : {}),
-      ...(parsed.projectId !== undefined ? { projectId: parsed.projectId } : {}),
-    },
+    data,
     include: {
       author: {
         select: { id: true, name: true },
@@ -70,12 +74,14 @@ export async function PATCH(
   });
 
   logActivity({
-    userId: user.id,
-    action: "UPDATE",
-    entityType: "KnowledgeEntry",
-    entityId: entry.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "UPDATED",
     clientId: entry.clientId ?? undefined,
-    meta: { title: entry.title },
+    projectId: entry.projectId ?? undefined,
+    subject: `Eintrag aktualisiert: ${entry.title}`,
+    tags: ["knowledge-entry"],
   });
 
   return apiSuccess({ entry });
@@ -92,7 +98,9 @@ export async function DELETE(
 
   const { noteId } = await params;
 
-  const existing = await prisma.knowledgeEntry.findUnique({ where: { id: noteId } });
+  const existing = await prisma.knowledgeEntry.findFirst({
+    where: { id: noteId, workspaceId: user.workspaceId },
+  });
   if (!existing) {
     return NextResponse.json({ error: "Eintrag nicht gefunden" }, { status: 404 });
   }
@@ -100,12 +108,14 @@ export async function DELETE(
   await prisma.knowledgeEntry.delete({ where: { id: noteId } });
 
   logActivity({
-    userId: user.id,
-    action: "DELETE",
-    entityType: "KnowledgeEntry",
-    entityId: noteId,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "DELETED",
     clientId: existing.clientId ?? undefined,
-    meta: { title: existing.title },
+    projectId: existing.projectId ?? undefined,
+    subject: `Eintrag geloescht: ${existing.title}`,
+    tags: ["knowledge-entry"],
   });
 
   return NextResponse.json({ success: true });

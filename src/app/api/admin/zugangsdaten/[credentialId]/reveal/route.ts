@@ -16,8 +16,8 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
 
   const { credentialId } = await params;
 
-  const credential = await prisma.credential.findUnique({
-    where: { id: credentialId },
+  const credential = await prisma.credential.findFirst({
+    where: { id: credentialId, workspaceId: user.workspaceId, deletedAt: null },
   });
 
   if (!credential) {
@@ -32,12 +32,14 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
   }
 
   logActivity({
-    userId: user.id,
-    action: "credential.reveal",
-    entityType: "Credential",
-    entityId: credentialId,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "NOTE",
     clientId: credential.clientId ?? undefined,
-    meta: { label: credential.label },
+    projectId: credential.projectId ?? undefined,
+    subject: `Zugangsdaten eingesehen: ${credential.label}`,
+    tags: ["credential", "reveal"],
   });
 
   return NextResponse.json({ value });

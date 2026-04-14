@@ -2,29 +2,39 @@
 
 import { useState } from "react";
 import {
-  KeyRound,
   FileText,
-  User,
   MessageSquare,
-  Server,
   Zap,
   Users,
   FolderOpen,
+  Phone,
+  Video,
+  Mail,
+  Send,
+  CheckCircle2,
+  Edit,
+  Trash2,
+  ArrowRightCircle,
+  Flag,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
 import { timeAgo } from "@/lib/time";
 
 interface ActivityEntry {
   id: string;
-  action: string;
-  entityType: string;
-  entityId: string;
-  meta: string | null;
-  createdAt: string | Date;
-  userId: string | null;
+  kind: string;
+  channel: string | null;
+  direction: string | null;
+  subject: string | null;
+  summary: string | null;
+  occurredAt: string | Date;
+  actorId: string | null;
   clientId: string | null;
-  user: { id: string; name: string } | null;
+  projectId: string | null;
+  actor: { id: string; name: string } | null;
   client: { id: string; name: string } | null;
+  project: { id: string; name: string } | null;
 }
 
 interface ActivityFeedProps {
@@ -32,61 +42,55 @@ interface ActivityFeedProps {
   initialNextCursor: string | null;
   filters?: {
     clientId?: string;
-    entityType?: string;
+    kind?: string;
     userId?: string;
   };
 }
 
-const entityTypeIcons: Record<string, LucideIcon> = {
-  Credential: KeyRound,
-  Document: FileText,
-  ContactPerson: User,
-  Note: MessageSquare,
-  ServerEntry: Server,
-  Impulse: Zap,
-  Client: Users,
-  Project: FolderOpen,
+const kindIcons: Record<string, LucideIcon> = {
+  CREATED: FileText,
+  UPDATED: Edit,
+  DELETED: Trash2,
+  STATUS_CHANGED: ArrowRightCircle,
+  NOTE: MessageSquare,
+  MEETING: Video,
+  CALL: Phone,
+  EMAIL: Mail,
+  WHATSAPP: MessageSquare,
+  OUTREACH_SENT: Send,
+  OUTREACH_REPLY: Mail,
+  IMPULSE_ACCEPTED: CheckCircle2,
+  IMPULSE_RESOLVED: CheckCircle2,
+  MILESTONE_REACHED: Flag,
+  DEPLOYED: Rocket,
+  IN_PERSON: Users,
 };
 
-const actionLabels: Record<string, string> = {
-  "credential.create": "Zugangsdaten erstellt",
-  "credential.update": "Zugangsdaten aktualisiert",
-  "credential.delete": "Zugangsdaten gelöscht",
-  "credential.reveal": "Zugangsdaten eingesehen",
-  "document.upload": "Dokument hochgeladen",
-  "document.delete": "Dokument gelöscht",
-  "note.create": "Notiz erstellt",
-  "note.update": "Notiz aktualisiert",
-  "note.delete": "Notiz gelöscht",
-  "contact.create": "Kontakt erstellt",
-  "contact.update": "Kontakt aktualisiert",
-  "contact.delete": "Kontakt gelöscht",
-  "server.create": "Server erstellt",
-  "server.update": "Server aktualisiert",
-  "server.delete": "Server gelöscht",
+const kindLabels: Record<string, string> = {
+  CREATED: "Erstellt",
+  UPDATED: "Aktualisiert",
+  DELETED: "Geloescht",
+  STATUS_CHANGED: "Status geaendert",
+  NOTE: "Notiz",
+  MEETING: "Meeting",
+  CALL: "Call",
+  EMAIL: "Email",
+  WHATSAPP: "WhatsApp",
+  IN_PERSON: "Persoenlich",
+  OUTREACH_SENT: "Outreach gesendet",
+  OUTREACH_REPLY: "Outreach Antwort",
+  IMPULSE_ACCEPTED: "Impuls akzeptiert",
+  IMPULSE_RESOLVED: "Impuls geloest",
+  MILESTONE_REACHED: "Meilenstein erreicht",
+  DEPLOYED: "Deployed",
 };
 
-function getActionLabel(action: string): string {
-  return actionLabels[action] ?? action;
+function getKindLabel(kind: string): string {
+  return kindLabels[kind] ?? kind;
 }
 
-function getEntityIcon(entityType: string): LucideIcon {
-  return entityTypeIcons[entityType] ?? FolderOpen;
-}
-
-function parseMetaPreview(meta: string | null): string | null {
-  if (!meta) return null;
-  try {
-    const parsed = JSON.parse(meta);
-    const parts: string[] = [];
-    if (parsed.label) parts.push(parsed.label);
-    else if (parsed.name) parts.push(parsed.name);
-    else if (parsed.title) parts.push(parsed.title);
-    if (parsed.type) parts.push(parsed.type);
-    return parts.length > 0 ? parts.join(" · ") : null;
-  } catch {
-    return null;
-  }
+function getKindIcon(kind: string): LucideIcon {
+  return kindIcons[kind] ?? FolderOpen;
 }
 
 export function ActivityFeed({
@@ -104,7 +108,7 @@ export function ActivityFeed({
     try {
       const params = new URLSearchParams({ cursor: nextCursor, limit: "50" });
       if (filters?.clientId) params.set("clientId", filters.clientId);
-      if (filters?.entityType) params.set("entityType", filters.entityType);
+      if (filters?.kind) params.set("kind", filters.kind);
       if (filters?.userId) params.set("userId", filters.userId);
 
       const res = await fetch(`/api/admin/aktivitaet?${params.toString()}`, {
@@ -123,7 +127,7 @@ export function ActivityFeed({
     return (
       <div className="py-20 text-center">
         <Zap size={32} className="mx-auto mb-3 text-ink-muted/40" />
-        <p className="text-ink-muted text-sm">Noch keine Aktivitäten</p>
+        <p className="text-ink-muted text-sm">Noch keine Aktivitaeten</p>
       </div>
     );
   }
@@ -133,32 +137,30 @@ export function ActivityFeed({
       <div className="bg-dark-100 border border-border rounded-xl overflow-hidden">
         <div className="divide-y divide-border">
           {activities.map((activity) => {
-            const Icon = getEntityIcon(activity.entityType);
-            const label = getActionLabel(activity.action);
-            const metaPreview = parseMetaPreview(activity.meta);
+            const Icon = getKindIcon(activity.kind);
+            const label = activity.subject ?? getKindLabel(activity.kind);
+            const subtext = activity.summary ?? null;
 
             return (
               <div
                 key={activity.id}
                 className="flex items-start gap-4 px-5 py-4 hover:bg-dark-200 transition-colors"
               >
-                {/* Icon */}
                 <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg bg-dark-300 border border-border flex items-center justify-center">
                   <Icon size={14} className="text-ink-muted" />
                 </div>
 
-                {/* Details */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-surface">{label}</p>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    {activity.user && (
+                    {activity.actor && (
                       <span className="text-xs text-ink-muted">
-                        {activity.user.name}
+                        {activity.actor.name}
                       </span>
                     )}
                     {activity.client && (
                       <>
-                        {activity.user && (
+                        {activity.actor && (
                           <span className="text-xs text-ink-muted/40">·</span>
                         )}
                         <span className="text-xs text-ink-muted">
@@ -166,21 +168,28 @@ export function ActivityFeed({
                         </span>
                       </>
                     )}
-                    {metaPreview && (
+                    {activity.project && (
+                      <>
+                        <span className="text-xs text-ink-muted/40">·</span>
+                        <span className="text-xs text-ink-muted">
+                          {activity.project.name}
+                        </span>
+                      </>
+                    )}
+                    {subtext && (
                       <>
                         <span className="text-xs text-ink-muted/40">·</span>
                         <span className="text-xs text-ink-muted/70 truncate max-w-[240px]">
-                          {metaPreview}
+                          {subtext}
                         </span>
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Time */}
                 <div className="shrink-0 text-right">
                   <span className="text-xs text-ink-muted whitespace-nowrap">
-                    {timeAgo(new Date(activity.createdAt))}
+                    {timeAgo(new Date(activity.occurredAt))}
                   </span>
                 </div>
               </div>
@@ -189,7 +198,6 @@ export function ActivityFeed({
         </div>
       </div>
 
-      {/* Load more */}
       {nextCursor && (
         <div className="mt-4 text-center">
           <button

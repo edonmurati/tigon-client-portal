@@ -1,5 +1,11 @@
 # Changelog — Tigon Client Portal
 
+### 2026-04-14 (Gent)
+- Multi-Tenancy Hardening: 4 P0 Tenant-Leaks in Admin-List-GETs geschlossen — `/api/admin/infrastruktur` (+ `[serverId]`), `/api/admin/dokumente`, `/api/admin/notizen`, `/api/admin/impulse` filtern jetzt nach `workspaceId` (Impulse via `project.workspaceId`-Relation, kein direktes Feld)
+- Task-Status PATCH: `status` zu `updateTaskSchema` hinzugefuegt + Handler in `/api/admin/aufgaben/[taskId]` mit `completedAt`-Auto-Sync (DONE setzt completedAt, Reopen nullt es)
+- Credentials POST: Invalid `type` gibt jetzt 400 zurueck statt 500 (Pre-Validation gegen `CredentialType` Enum bevor Prisma erreicht wird)
+- Multi-Assign API verifiziert: `assigneeIds`-Array auf Task-PATCH persistiert beide User, Board-Endpoint liefert "Gent Cungu, Edon Muratovic"
+
 ### 2026-04-13 (Gent)
 - Schema: `ClientStatus` (3 Werte) → `ClientStage` (6: COLD/WARM/ACTIVE/PRO_BONO/PAUSED/ENDED)
 - Schema: `Note` Model entfernt → `KnowledgeEntry` mit `category: EntryCategory` (13 Kategorien inkl. CHANGELOG, DECISION, MEETING_NOTE etc.)

@@ -24,8 +24,8 @@ export default async function KundeDetailPage({ params }: PageProps) {
     where: { id: clientId },
     include: {
       projects: {
+        where: { deletedAt: null },
         include: {
-          areas: true,
           milestones: true,
           _count: {
             select: {
@@ -50,16 +50,16 @@ export default async function KundeDetailPage({ params }: PageProps) {
   // Fetch V2 CRM data
   const [contacts, notes, credentials, documents, servers] = await Promise.all([
     prisma.contactPerson.findMany({
-      where: { clientId },
+      where: { clientId, deletedAt: null },
       orderBy: [{ isPrimary: "desc" }, { name: "asc" }],
     }),
     prisma.knowledgeEntry.findMany({
-      where: { clientId },
+      where: { clientId, deletedAt: null },
       include: { author: { select: { id: true, name: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.credential.findMany({
-      where: { clientId },
+      where: { clientId, deletedAt: null },
       select: {
         id: true,
         label: true,
@@ -73,7 +73,7 @@ export default async function KundeDetailPage({ params }: PageProps) {
       orderBy: { createdAt: "desc" },
     }),
     prisma.document.findMany({
-      where: { clientId },
+      where: { clientId, deletedAt: null },
       select: {
         id: true,
         name: true,
@@ -86,8 +86,8 @@ export default async function KundeDetailPage({ params }: PageProps) {
       },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.serverEntry.findMany({
-      where: { clientId },
+    prisma.server.findMany({
+      where: { clientId, deletedAt: null },
       include: { project: { select: { id: true, name: true } } },
       orderBy: { name: "asc" },
     }),

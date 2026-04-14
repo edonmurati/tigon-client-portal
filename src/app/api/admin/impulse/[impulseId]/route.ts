@@ -16,8 +16,12 @@ export async function GET(
 
   const { impulseId } = await params;
 
-  const impulse = await prisma.impulse.findUnique({
-    where: { id: impulseId },
+  const impulse = await prisma.impulse.findFirst({
+    where: {
+      id: impulseId,
+      deletedAt: null,
+      project: { workspaceId: user.workspaceId, deletedAt: null },
+    },
     include: {
       project: {
         include: {
@@ -27,10 +31,8 @@ export async function GET(
       author: {
         select: { id: true, name: true, email: true },
       },
-      area: {
-        select: { id: true, name: true },
-      },
       comments: {
+        where: { deletedAt: null },
         include: {
           author: {
             select: { id: true, name: true, role: true },
@@ -72,6 +74,18 @@ export async function PATCH(
       { error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` },
       { status: 400 }
     );
+  }
+
+  const existing = await prisma.impulse.findFirst({
+    where: {
+      id: impulseId,
+      deletedAt: null,
+      project: { workspaceId: user.workspaceId, deletedAt: null },
+    },
+    select: { id: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const impulse = await prisma.impulse.update({

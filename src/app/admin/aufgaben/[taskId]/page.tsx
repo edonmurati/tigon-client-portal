@@ -16,24 +16,32 @@ export default async function TaskDetailPage({ params }: PageProps) {
   const { taskId } = await params;
 
   const [task, clients, projects, admins] = await Promise.all([
-    prisma.task.findUnique({
-      where: { id: taskId },
+    prisma.task.findFirst({
+      where: {
+        id: taskId,
+        deletedAt: null,
+        project: { workspaceId: user.workspaceId, deletedAt: null },
+      },
       include: {
-        assignee: { select: { id: true, name: true, email: true } },
+        assignees: {
+          include: { user: { select: { id: true, name: true, email: true } } },
+        },
         client: { select: { id: true, name: true, stage: true } },
         project: { select: { id: true, name: true } },
       },
     }),
     prisma.client.findMany({
+      where: { workspaceId: user.workspaceId, deletedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.project.findMany({
+      where: { workspaceId: user.workspaceId, deletedAt: null },
       select: { id: true, name: true, clientId: true },
       orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
-      where: { role: "ADMIN" },
+      where: { workspaceId: user.workspaceId, role: "ADMIN", deletedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -64,7 +72,7 @@ export default async function TaskDetailPage({ params }: PageProps) {
           title: task.title,
           description: task.description,
           priority: task.priority,
-          assigneeId: task.assigneeId,
+          assigneeIds: task.assignees.map((a) => a.userId),
           clientId: task.clientId,
           projectId: task.projectId,
           dueDate: task.dueDate ? task.dueDate.toISOString() : null,

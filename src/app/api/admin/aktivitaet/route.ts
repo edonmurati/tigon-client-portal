@@ -1,6 +1,7 @@
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import type { ActivityKind } from "@/generated/prisma";
 
 export async function GET(request: NextRequest) {
   const user = await getAuthUser();
@@ -10,42 +11,38 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const clientId = searchParams.get("clientId") || undefined;
-  const entityType = searchParams.get("entityType") || undefined;
-  const userId = searchParams.get("userId") || undefined;
+  const kind = (searchParams.get("kind") as ActivityKind | null) || undefined;
+  const actorId = searchParams.get("userId") || undefined;
   const cursor = searchParams.get("cursor") || undefined;
   const limitParam = searchParams.get("limit");
   const limit = limitParam ? Math.min(parseInt(limitParam, 10), 100) : 50;
 
-  // Cursor-based pagination: cursor = id of last item on previous page
-  // We fetch the createdAt of that item and use it as the boundary
-  let cursorCreatedAt: Date | undefined;
+  let cursorOccurredAt: Date | undefined;
   if (cursor) {
-    const cursorItem = await prisma.activityLog.findUnique({
-      where: { id: cursor },
-      select: { createdAt: true },
+    const cursorItem = await prisma.activity.findFirst({
+      where: { id: cursor, workspaceId: user.workspaceId },
+      select: { occurredAt: true },
     });
     if (cursorItem) {
-      cursorCreatedAt = cursorItem.createdAt;
+      cursorOccurredAt = cursorItem.occurredAt;
     }
   }
 
-  const activities = await prisma.activityLog.findMany({
+  const activities = await prisma.activity.findMany({
     where: {
+      workspaceId: user.workspaceId,
       ...(clientId ? { clientId } : {}),
-      ...(entityType ? { entityType } : {}),
-      ...(userId ? { userId } : {}),
-      ...(cursorCreatedAt ? { createdAt: { lt: cursorCreatedAt } } : {}),
+      ...(kind ? { kind } : {}),
+      ...(actorId ? { actorId } : {}),
+      ...(cursorOccurredAt ? { occurredAt: { lt: cursorOccurredAt } } : {}),
     },
     include: {
-      user: {
-        select: { id: true, name: true },
-      },
-      client: {
-        select: { id: true, name: true },
-      },
+      actor: { select: { id: true, name: true } },
+      client: { select: { id: true, name: true } },
+      project: { select: { id: true, name: true } },
     },
-    orderBy: { createdAt: "desc" },
-    take: limit + 1, // fetch one extra to know if there's a next page
+    orderBy: { occurredAt: "desc" },
+    take: limit + 1,
   });
 
   const hasMore = activities.length > limit;

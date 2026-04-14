@@ -52,7 +52,7 @@ export default async function AdminDashboardPage() {
       },
     }),
     prisma.task.findMany({
-      where: { completedAt: null, assigneeId: user.id },
+      where: { completedAt: null, assignees: { some: { userId: user.id } } },
       orderBy: [{ dueDate: "asc" }, { priority: "desc" }],
       take: 5,
       include: {

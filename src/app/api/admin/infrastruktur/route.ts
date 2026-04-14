@@ -13,8 +13,10 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("clientId");
 
-  const servers = await prisma.serverEntry.findMany({
+  const servers = await prisma.server.findMany({
     where: {
+      workspaceId: user.workspaceId,
+      deletedAt: null,
       ...(clientId ? { clientId } : {}),
     },
     select: {
@@ -71,8 +73,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
 
-  const server = await prisma.serverEntry.create({
+  const server = await prisma.server.create({
     data: {
+      workspaceId: user.workspaceId,
       name: name.trim(),
       provider: provider?.trim() || null,
       url: url?.trim() || null,
@@ -101,12 +104,15 @@ export async function POST(req: NextRequest) {
   });
 
   logActivity({
-    userId: user.id,
-    action: "server.create",
-    entityType: "ServerEntry",
-    entityId: server.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "CREATED",
     clientId: server.clientId ?? undefined,
-    meta: { name: server.name, status: server.status },
+    projectId: server.projectId ?? undefined,
+    subject: `Server erstellt: ${server.name}`,
+    summary: server.status,
+    tags: ["server"],
   });
 
   return NextResponse.json({ server }, { status: 201 });

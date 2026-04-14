@@ -16,8 +16,8 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
   const { serverId } = await params;
 
-  const server = await prisma.serverEntry.findUnique({
-    where: { id: serverId },
+  const server = await prisma.server.findFirst({
+    where: { id: serverId, workspaceId: user.workspaceId, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -51,8 +51,8 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
   const { serverId } = await params;
 
-  const existing = await prisma.serverEntry.findUnique({
-    where: { id: serverId },
+  const existing = await prisma.server.findFirst({
+    where: { id: serverId, workspaceId: user.workspaceId, deletedAt: null },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -93,7 +93,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     }
   }
 
-  const server = await prisma.serverEntry.update({
+  const server = await prisma.server.update({
     where: { id: serverId },
     data: updateData,
     select: {
@@ -115,12 +115,15 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   });
 
   logActivity({
-    userId: user.id,
-    action: "server.update",
-    entityType: "ServerEntry",
-    entityId: server.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "UPDATED",
     clientId: server.clientId ?? undefined,
-    meta: { name: server.name, status: server.status },
+    projectId: server.projectId ?? undefined,
+    subject: `Server aktualisiert: ${server.name}`,
+    summary: server.status,
+    tags: ["server"],
   });
 
   return NextResponse.json({ server });
@@ -134,22 +137,27 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
 
   const { serverId } = await params;
 
-  const existing = await prisma.serverEntry.findUnique({
-    where: { id: serverId },
+  const existing = await prisma.server.findFirst({
+    where: { id: serverId, workspaceId: user.workspaceId, deletedAt: null },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await prisma.serverEntry.delete({ where: { id: serverId } });
+  await prisma.server.update({
+    where: { id: serverId },
+    data: { deletedAt: new Date() },
+  });
 
   logActivity({
-    userId: user.id,
-    action: "server.delete",
-    entityType: "ServerEntry",
-    entityId: serverId,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "DELETED",
     clientId: existing.clientId ?? undefined,
-    meta: { name: existing.name },
+    projectId: existing.projectId ?? undefined,
+    subject: `Server geloescht: ${existing.name}`,
+    tags: ["server"],
   });
 
   return NextResponse.json({ success: true });

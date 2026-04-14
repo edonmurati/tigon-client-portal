@@ -34,6 +34,7 @@ const statusColors: Record<ServerStatus, string> = {
   DEGRADED: "text-yellow-400",
   OFFLINE: "text-red-400",
   MAINTENANCE: "text-blue-400",
+  DECOMMISSIONED: "text-ink-muted",
 };
 
 export function InfrastrukturBoard({

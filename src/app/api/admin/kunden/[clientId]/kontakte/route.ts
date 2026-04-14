@@ -14,6 +14,14 @@ export async function GET(
 
   const { clientId } = await params;
 
+  const client = await prisma.client.findFirst({
+    where: { id: clientId, workspaceId: user.workspaceId },
+    select: { id: true },
+  });
+  if (!client) {
+    return NextResponse.json({ error: "Kunde nicht gefunden" }, { status: 404 });
+  }
+
   const contacts = await prisma.contactPerson.findMany({
     where: { clientId },
     orderBy: [{ isPrimary: "desc" }, { name: "asc" }],
@@ -54,8 +62,10 @@ export async function POST(
     return NextResponse.json({ error: "Name ist erforderlich" }, { status: 400 });
   }
 
-  // Verify client exists
-  const client = await prisma.client.findUnique({ where: { id: clientId } });
+  // Verify client exists in same workspace
+  const client = await prisma.client.findFirst({
+    where: { id: clientId, workspaceId: user.workspaceId },
+  });
   if (!client) {
     return NextResponse.json({ error: "Kunde nicht gefunden" }, { status: 404 });
   }
@@ -81,12 +91,15 @@ export async function POST(
   });
 
   logActivity({
-    userId: user.id,
-    action: "CREATE",
-    entityType: "ContactPerson",
-    entityId: contact.id,
+    workspaceId: user.workspaceId,
+    actorId: user.id,
+    actorName: user.name,
+    kind: "CREATED",
     clientId,
-    meta: { name: contact.name, isPrimary: contact.isPrimary },
+    contactId: contact.id,
+    subject: `Kontakt erstellt: ${contact.name}`,
+    summary: contact.isPrimary ? "Hauptkontakt" : undefined,
+    tags: ["contact"],
   });
 
   return NextResponse.json({ contact }, { status: 201 });
