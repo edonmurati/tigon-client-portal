@@ -5,8 +5,6 @@ import Link from "next/link";
 import { Inbox } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { leadStatusLabels, leadStatusColors } from "@/lib/constants";
-import { formatDistanceToNow } from "date-fns";
-import { de } from "date-fns/locale";
 
 export default async function AnfragenPage() {
   const user = await getAuthUser();
@@ -106,9 +104,10 @@ export default async function AnfragenPage() {
                   </div>
                   <div>
                     <p className="text-xs text-ink-muted">
-                      {formatDistanceToNow(new Date(lead.createdAt), {
-                        addSuffix: true,
-                        locale: de,
+                      {new Date(lead.createdAt).toLocaleDateString("de-DE", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
                       })}
                     </p>
                   </div>

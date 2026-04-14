@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut, LayoutDashboard, CheckSquare, BookOpen } from "lucide-react";
+import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut, LayoutDashboard, CheckSquare, BookOpen, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { ProtectedRoute } from "@/components/auth/auth-provider";
@@ -15,6 +15,7 @@ const navSections = [
       { href: "/admin/impulse", label: "Impulse", icon: Bell, matchPrefix: "/admin/impulse" },
       { href: "/admin/aufgaben", label: "Aufgaben", icon: CheckSquare, matchPrefix: "/admin/aufgaben" },
       { href: "/admin/kunden", label: "Kunden", icon: Users, matchPrefix: "/admin/kunden" },
+      { href: "/admin/anfragen", label: "Anfragen", icon: Inbox, matchPrefix: "/admin/anfragen" },
       { href: "/admin/projekte", label: "Projekte", icon: FolderOpen, matchPrefix: "/admin/projekte" },
       { href: "/admin/wissen", label: "Wissen", icon: BookOpen, matchPrefix: "/admin/wissen" },
     ],

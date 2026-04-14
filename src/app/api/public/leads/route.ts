@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
         projekttypen,
         ipAddress: ip,
         userAgent,
-        rawPayload: body,
+        rawPayload: body as import("@prisma/client").Prisma.InputJsonValue,
         // primary contact via ContactPerson — create inline
         contacts: {
           create: {
