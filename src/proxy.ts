@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = [
 
 function isPublicRoute(pathname: string): boolean {
   if (PUBLIC_ROUTES.includes(pathname)) return true;
+  if (pathname.startsWith("/api/public/")) return true;
   if (pathname.startsWith("/_next") || pathname === "/favicon.ico") return true;
   return false;
 }
