@@ -11,10 +11,10 @@ async function main() {
   const passwordHash = await hash("admin123", 12);
 
   const edon = await prisma.user.upsert({
-    where: { workspaceId_email: { workspaceId: workspace.id, email: "edon@tigonautomation.de" } },
+    where: { workspaceId_email: { workspaceId: workspace.id, email: "edon.murati@tigonautomation.de" } },
     update: { passwordHash, role: "ADMIN" },
     create: {
-      email: "edon@tigonautomation.de",
+      email: "edon.murati@tigonautomation.de",
       passwordHash,
       name: "Edon Muratovic",
       role: "ADMIN",

@@ -1,22 +1,20 @@
 # Handoff — Tigon Client Portal
-Letzte Session: 2026-04-14 (Gent)
+Letzte Session: 2026-04-16 (Gent)
 
 ## Was wurde gemacht
-- Multi-Tenancy: 4 P0 Leaks + 8 FK-Injection-Stellen gefixt (Helpers in `src/lib/api.ts`), Tag-Endpoint gehaertet
-- Dashboard: "Naechste Deadlines" Widget
-- Nightly-Export via Cron + Script live (03:00, 14d Retention)
-- `/dev push` durchgelaufen → `dev` auf origin bei 20a1779, Coolify Rebuild laeuft
+- Phase 1-3 Data Migration abgeschlossen: Schema erweitert + Seed mit ALLEN Business-Daten aus ~/tigon/ und ~/projects/*/docs/
+- Admin-Login gefixt: Emails auf gent.cungu@/edon.murati@tigonautomation.de, Passwort tigon2026
+- Alle Seed-Scripts + CLAUDE.md auf neue Emails konsistent gemacht
 
 ## Was ist offen
-- Staging-Rebuild im Browser verifizieren: Multi-Assign-Chip an `/admin/aufgaben/cmnyk5ama0002vqfl2xq9yxwh`
-- Seed-Script auf neues Schema umschreiben (Dev-DB hat Live-Daten → destruktiv, deferred)
-- Frontend: `workspaceId` propagation bei Admin-Creates
-- `/dev done` fuer main-Deploy (Production — nur mit expliziter Freigabe)
+- Browser-Test: Portal durchklicken, pruefen ob alle 72 Decisions, 51 Journals, 49+ Knowledge Entries korrekt angezeigt werden
+- `/dev push` + `/dev done` stehen noch aus
+- Staging-DB hat die neuen Schema-Felder noch nicht (Migration muss auf Staging laufen)
 
 ## Landminen
-- **Staging-DB Port 54329 nicht extern erreichbar** (`is_public: False`). Migration laeuft nur im Container via `docker-entrypoint.sh` → `prisma migrate deploy`. Von aussen `P1001`.
-- **Dev-DB hat Live-Daten:** Seed-Rewrite erst machen wenn Staging clean steht.
-- **Tenant-Leak-Pattern systematisch:** bei JEDER neuen Admin-Route `workspaceId: user.workspaceId` ins `where`; bei Create/Update `assertClientInWorkspace` / `assertProjectInWorkspace` aufrufen.
+- **Seed braucht existierende User:** `seed-data.ts` macht `findFirstOrThrow` auf `gent.cungu@tigonautomation.de` — wenn die DB frisch ist, muss zuerst `seed-admin.ts` laufen (erstellt Workspace + Gent-User)
+- **seed-admin.ts erstellt nur Gent**, `seed-fixture.ts` erstellt Edon — beide muessen vor `seed-data.ts` laufen
+- **bcryptjs Hash-Timing:** Seed setzt Hash via `update`, aber wenn der Seed abbricht bevor der Hash-Block laeuft, bleibt der alte Hash. Bei Login-Problemen: Hash manuell verifizieren
 
 ## Naechster Schritt
-Browser-Test Multi-Assign auf Staging, danach `/dev done`.
+Browser-Test auf http://habit:3002 — alle Admin-Bereiche durchklicken, dann `/dev push`.

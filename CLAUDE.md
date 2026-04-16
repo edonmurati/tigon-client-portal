@@ -89,9 +89,9 @@ arbeits-branch (lokal) ──/dev push──→ dev (Coolify Staging) ──/dev
 - Port: 3000
 
 ## Test Credentials
-- Admin: edon@tigonautomation.de / admin123
-- Admin: gent@tigonautomation.de / admin123
-- Client: ap@fachwelt-verlag.de / client123
+- Admin: edon.murati@tigonautomation.de / tigon2026
+- Admin: gent.cungu@tigonautomation.de / tigon2026
+- Client: ap@fachwelt-verlag.de / portal2026
 - Client: marlon@horbach.de / client123
 
 ## Architecture Decisions
@@ -102,7 +102,8 @@ arbeits-branch (lokal) ──/dev push──→ dev (Coolify Staging) ──/dev
 - Flat role model: ADMIN | CLIENT
 
 ## Collab Status
-- **Last Session:** 2026-04-14 (Gent)
+- **Last Session:** 2026-04-16 (Gent)
 - **Last Author:** Gent
-- **Phase:** Staging-Deploy ausgerollt (P0+P1 Multi-Tenancy-Hardening + FK-Injection-Guards + Nightly-Export live). `dev` auf origin bei 20a1779, Coolify rebuildet + Container macht `migrate deploy` beim Start.
+- **Phase:** Phase 1-3 Data Migration complete. Schema erweitert (ContactPerson.workspaceId, Workspace description/objective/techStack/mrrCents/burnRateCents). Seed enthält alle Business-Daten aus ~/tigon/ + ~/projects/*/docs/ (72 Decisions, 51 Journals, 49+ Knowledge Entries, 85 Tasks, 16 Contacts). Admin-Login auf gent.cungu@/edon.murati@ umgestellt.
+- **Next Action:** Browser-Test im Portal — alle Bereiche durchklicken (Decisions, Wissen, Aufgaben, Journal). Danach `/dev push` + `/dev done`.
 - **Next Action:** Staging im Browser smoke-testen (http://habit:3001/admin/aufgaben/cmnyk5ama0002vqfl2xq9yxwh fuer Multi-Assign, dann `/dev done` → main).

@@ -1,5 +1,12 @@
 # Changelog — Tigon Client Portal
 
+### 2026-04-16 (Gent)
+- Schema: ContactPerson.workspaceId hinzugefuegt (Netzwerk-Kontakte ohne Client/Lead moeglich)
+- Schema: Workspace erweitert um description, objective, techStack, mrrCents, burnRateCents
+- Seed komplett neu: alle Business-Daten aus ~/tigon/ (27 Decisions, 48 Todos, 14 Backlog, 14 Ideas, 14 Journal, 12 Insights, 9 Netzwerk-Kontakte) + ~/projects/*/docs/ (45 Project Decisions, 14 Handoffs, 23 Changelogs, 23 Knowledge Entries)
+- Admin-User Emails auf gent.cungu@/edon.murati@tigonautomation.de umgestellt, Passwort: tigon2026
+- 2 neue Projekte im Seed: Steuerberater Demo, Article Editor Hub
+
 ### 2026-04-14 (Gent)
 - Multi-Tenancy Hardening: 4 P0 Tenant-Leaks in Admin-List-GETs geschlossen — `/api/admin/infrastruktur` (+ `[serverId]`), `/api/admin/dokumente`, `/api/admin/notizen`, `/api/admin/impulse` filtern jetzt nach `workspaceId` (Impulse via `project.workspaceId`-Relation, kein direktes Feld)
 - Task-Status PATCH: `status` zu `updateTaskSchema` hinzugefuegt + Handler in `/api/admin/aufgaben/[taskId]` mit `completedAt`-Auto-Sync (DONE setzt completedAt, Reopen nullt es)

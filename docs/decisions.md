@@ -1,5 +1,13 @@
 # Decisions — Tigon Client Portal
 
+## 2026-04-16: Admin-User Emails auf volle Domain-Adressen
+**Warum:** Login mit `gent@tigonautomation.de` war inkonsistent mit der realen Email `gent.cungu@tigonautomation.de`. Operator konnte sich nicht einloggen. Alle Seed-Scripts, CLAUDE.md und DB auf `gent.cungu@` / `edon.murati@` umgestellt.
+**Alternativen:** Kurzform behalten und im Login-Flow aliasing machen — verworfen, unnoetige Komplexitaet.
+
+## 2026-04-16: Playbooks bleiben als Files, nicht in DB
+**Warum:** Playbooks/SOPs sind HOW-TOs fuer Claude (Verhaltensregeln) — kein operatives Business-Wissen. Sie gehoeren in den HABIT-Layer (Files), nicht in die DB. Urspruenglicher Plan sah ein `Playbook` Model vor, wurde gestrichen.
+**Alternativen:** Playbook-Model in Prisma — verworfen, weil Playbooks von Claude gelesen werden und File-basiert besser integrieren.
+
 ## 2026-04-13: Schema-Shift zu Stage-Model + Knowledge Entries
 **Warum:** Portal war zu CRM-lastig (Status) und hatte nur generische "Notes". Gent will Ordner-CRM-Logik (cold→warm→active→pro_bono→paused→ended) abbilden und Wissens-Einträge kategorisiert speichern (Changelog, Decision, Meeting Note, etc.). `Note` war zu flach für die tatsächliche Nutzung.
 **Alternativen:** (1) `Note` behalten + Tags statt Kategorien — verworfen, zu lose. (2) Separate Models pro Typ (Meeting, Decision...) — verworfen, Explosion der Tabellen. (3) Status auf 3 Werte lassen — verworfen, matcht nicht die Realität der Kunden-Pipeline.
