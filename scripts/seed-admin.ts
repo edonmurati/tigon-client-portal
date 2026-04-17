@@ -15,11 +15,23 @@ async function main() {
 
   const passwordHash = await hash("admin123", 12);
 
-  const gent = await prisma.user.upsert({
-    where: { workspaceId_email: { workspaceId: workspace.id, email: "gent@tigonautomation.de" } },
+  const edon = await prisma.user.upsert({
+    where: { workspaceId_email: { workspaceId: workspace.id, email: "edon.muratovic@tigonautomation.de" } },
     update: { passwordHash, role: "ADMIN" },
     create: {
-      email: "gent@tigonautomation.de",
+      email: "edon.muratovic@tigonautomation.de",
+      passwordHash,
+      name: "Edon Muratovic",
+      role: "ADMIN",
+      workspaceId: workspace.id,
+    },
+  });
+
+  const gent = await prisma.user.upsert({
+    where: { workspaceId_email: { workspaceId: workspace.id, email: "gent.cungu@tigonautomation.de" } },
+    update: { passwordHash, role: "ADMIN" },
+    create: {
+      email: "gent.cungu@tigonautomation.de",
       passwordHash,
       name: "Gent Cungu",
       role: "ADMIN",
@@ -28,6 +40,7 @@ async function main() {
   });
 
   console.log(`Workspace: ${workspace.name} (${workspace.id})`);
+  console.log(`Admin: ${edon.email} / admin123`);
   console.log(`Admin: ${gent.email} / admin123`);
 }
 

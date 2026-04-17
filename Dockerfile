@@ -43,6 +43,11 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
+# Copy scripts + src (seed-admin runs on every boot via entrypoint, needs src/lib + src/generated)
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+
 # Copy entrypoint
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
