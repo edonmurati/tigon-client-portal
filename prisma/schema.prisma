@@ -26,7 +26,6 @@ enum ClientStage {
   COLD
   WARM
   ACTIVE
-  PRO_BONO
   PAUSED
   ENDED
 }

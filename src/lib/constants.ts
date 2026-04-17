@@ -4,7 +4,6 @@ export const clientStageLabels: Record<string, string> = {
   COLD: "Cold",
   WARM: "Warm",
   ACTIVE: "Aktiv",
-  PRO_BONO: "Pro Bono",
   PAUSED: "Pausiert",
   ENDED: "Beendet",
 };
@@ -13,7 +12,6 @@ export const clientStageColors: Record<string, string> = {
   COLD: "text-blue-400 bg-blue-400/10 border border-blue-400/20",
   WARM: "text-orange-400 bg-orange-400/10 border border-orange-400/20",
   ACTIVE: "text-green-400 bg-green-400/10 border border-green-400/20",
-  PRO_BONO: "text-purple-400 bg-purple-400/10 border border-purple-400/20",
   PAUSED: "text-yellow-400 bg-yellow-400/10 border border-yellow-400/20",
   ENDED: "text-ink-muted bg-dark-300 border border-border",
 };
