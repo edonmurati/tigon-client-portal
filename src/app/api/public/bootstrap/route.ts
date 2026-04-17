@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const pushResult = await execAsync(
-      "node node_modules/prisma/build/index.js db push --schema prisma/schema.prisma --accept-data-loss --skip-generate",
-      { cwd: "/app", maxBuffer: 10 * 1024 * 1024 }
+      "node node_modules/prisma/build/index.js db push --schema prisma/schema.prisma --accept-data-loss --force-reset",
+      { cwd: "/app", maxBuffer: 10 * 1024 * 1024, timeout: 90000 }
     );
     out.db_push_stdout = pushResult.stdout;
     out.db_push_stderr = pushResult.stderr;
