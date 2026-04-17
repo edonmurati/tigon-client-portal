@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
         // primary contact via ContactPerson — create inline
         contacts: {
           create: {
+            workspaceId,
             name,
             email,
             phone: telefon,

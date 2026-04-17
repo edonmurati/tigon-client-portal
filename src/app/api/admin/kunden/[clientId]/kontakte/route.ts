@@ -80,6 +80,7 @@ export async function POST(
 
   const contact = await prisma.contactPerson.create({
     data: {
+      workspaceId: user.workspaceId,
       clientId,
       name: name.trim(),
       role: role?.trim() || null,
