@@ -7,7 +7,7 @@ export const createClientSchema = z.object({
     .min(1, "Slug is required")
     .transform((s) => s.trim().toLowerCase()),
   stage: z
-    .enum(["COLD", "WARM", "ACTIVE", "PRO_BONO", "PAUSED", "ENDED"])
+    .enum(["COLD", "WARM", "ACTIVE", "PAUSED", "ENDED"])
     .optional(),
   industry: z.string().optional(),
   website: z.string().url().optional().or(z.literal("")),
@@ -30,7 +30,7 @@ export const updateClientSchema = z.object({
     .transform((s) => s.trim().toLowerCase())
     .optional(),
   stage: z
-    .enum(["COLD", "WARM", "ACTIVE", "PRO_BONO", "PAUSED", "ENDED"])
+    .enum(["COLD", "WARM", "ACTIVE", "PAUSED", "ENDED"])
     .optional(),
   industry: z.string().nullable().optional(),
   website: z.string().url().nullable().optional().or(z.literal("")),

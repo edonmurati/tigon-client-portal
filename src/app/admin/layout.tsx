@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut, LayoutDashboard, CheckSquare, BookOpen, Inbox } from "lucide-react";
+import { Bell, Users, FolderOpen, FileText, KeyRound, Server, Activity, Menu, X, LogOut, LayoutDashboard, CheckSquare, BookOpen, Inbox, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { ProtectedRoute } from "@/components/auth/auth-provider";
@@ -14,14 +14,20 @@ const navSections = [
       { href: "/admin", label: "Dashboard", icon: LayoutDashboard, matchPrefix: "/admin", exact: true },
       { href: "/admin/impulse", label: "Impulse", icon: Bell, matchPrefix: "/admin/impulse" },
       { href: "/admin/aufgaben", label: "Aufgaben", icon: CheckSquare, matchPrefix: "/admin/aufgaben" },
-      { href: "/admin/kunden", label: "Kunden", icon: Users, matchPrefix: "/admin/kunden" },
-      { href: "/admin/anfragen", label: "Anfragen", icon: Inbox, matchPrefix: "/admin/anfragen" },
+      { href: "/admin/aktive-kunden", label: "Aktive Kunden", icon: Users, matchPrefix: "/admin/aktive-kunden" },
       { href: "/admin/projekte", label: "Projekte", icon: FolderOpen, matchPrefix: "/admin/projekte" },
       { href: "/admin/wissen", label: "Wissen", icon: BookOpen, matchPrefix: "/admin/wissen" },
     ],
   },
   {
     label: "CRM",
+    items: [
+      { href: "/admin/crm", label: "Pipeline", icon: Target, matchPrefix: "/admin/crm" },
+      { href: "/admin/anfragen", label: "Anfragen", icon: Inbox, matchPrefix: "/admin/anfragen" },
+    ],
+  },
+  {
+    label: "Daten",
     items: [
       { href: "/admin/zugangsdaten", label: "Zugangsdaten", icon: KeyRound, matchPrefix: "/admin/zugangsdaten" },
       { href: "/admin/dokumente", label: "Dokumente", icon: FileText, matchPrefix: "/admin/dokumente" },

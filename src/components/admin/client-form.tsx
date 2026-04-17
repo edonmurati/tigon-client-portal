@@ -31,7 +31,6 @@ const stageOptions = [
   { value: "COLD", label: "Cold" },
   { value: "WARM", label: "Warm" },
   { value: "ACTIVE", label: "Aktiv" },
-  { value: "PRO_BONO", label: "Pro Bono" },
   { value: "PAUSED", label: "Pausiert" },
   { value: "ENDED", label: "Beendet" },
 ];

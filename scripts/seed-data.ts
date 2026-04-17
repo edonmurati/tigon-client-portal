@@ -51,19 +51,6 @@ async function main() {
   });
   console.log(`  Client: ${horbach.name}`);
 
-  const vasko = await prisma.client.upsert({
-    where: { workspaceId_slug: { workspaceId: WORKSPACE_ID, slug: "vasko" } },
-    update: {},
-    create: {
-      workspaceId: WORKSPACE_ID,
-      name: "Vasko (Society de Five)",
-      slug: "vasko",
-      stage: "PRO_BONO",
-      industry: "Fashion / D2C — Dark Luxury",
-    },
-  });
-  console.log(`  Client: ${vasko.name}`);
-
   const eid = await prisma.client.upsert({
     where: { workspaceId_slug: { workspaceId: WORKSPACE_ID, slug: "eid" } },
     update: {},
@@ -152,20 +139,6 @@ async function main() {
     },
   });
 
-  const vaskoContact = await prisma.contactPerson.upsert({
-    where: { id: "seed-contact-vasko" },
-    update: {},
-    create: {
-      id: "seed-contact-vasko",
-      workspaceId: WORKSPACE_ID,
-      clientId: vasko.id,
-      name: "Vasko",
-      role: "Inhaber / Creative Director",
-      isPrimary: true,
-      notes: "Persoenlicher Kontakt",
-    },
-  });
-
   const eidContact = await prisma.contactPerson.upsert({
     where: { id: "seed-contact-eid-client" },
     update: {},
@@ -180,7 +153,7 @@ async function main() {
     },
   });
 
-  console.log(`  Contacts: Alija, Katrin, Marlon, Paul, Jonathan, Vasko, Hr. Eid`);
+  console.log(`  Contacts: Alija, Katrin, Marlon, Paul, Jonathan, Hr. Eid`);
 
   // ═══════════════════════════════════════════════════════════════════
   // ADMIN USERS — set password on existing users (created by init-workspace)
@@ -400,24 +373,6 @@ async function main() {
       health: "AMBER",
       stack: ["Next.js", "Tailwind"],
       phase: "Live — Content-Approval pending",
-    },
-  });
-
-  const vaskoWebsite = await prisma.project.upsert({
-    where: { workspaceId_slug: { workspaceId: WORKSPACE_ID, slug: "vasko-website" } },
-    update: {},
-    create: {
-      workspaceId: WORKSPACE_ID,
-      clientId: vasko.id,
-      name: "Society de Five Website",
-      slug: "vasko-website",
-      description: "Brand-Website fuer Dark Luxury Fashion Label @societydefive",
-      status: "ACTIVE",
-      type: "CLIENT_PROJECT",
-      health: "GREEN",
-      repoUrl: "https://github.com/gentdergent/vasko-website",
-      stack: ["Next.js", "Tailwind"],
-      phase: "Setup",
     },
   });
 
@@ -967,17 +922,6 @@ async function main() {
       priority: "NORMAL" as const,
       status: "OPEN" as const,
       tags: ["client"],
-    },
-    // Vasko
-    {
-      id: "seed-task-vasko-scope",
-      projectId: vaskoWebsite.id,
-      clientId: vasko.id,
-      title: "Scope klaeren: Landing Page / Brand-Seite / Shop?",
-      ownerTag: "GENT" as const,
-      priority: "NORMAL" as const,
-      status: "OPEN" as const,
-      tags: ["scope"],
     },
     // Eid / LUMINAR
     {
@@ -2307,9 +2251,6 @@ async function main() {
     { id: "seed-pdec-tcp-env-symlink", workspaceId: WORKSPACE_ID, projectId: clientPortal.id, authorId: GENT_ID, title: "Env-File via .env.local Symlink", context: "/dev Skill erwartet .env.local, Prisma liest .env.", decision: ".env -> .env.local Symlink.", alternatives: "dotenv-cli (nicht ueberall installiert)", consequences: "CLI und Next.js lesen aus derselben Quelle.", status: "ACTIVE" as const, decidedAt: new Date("2026-04-13"), tags: ["portal", "dx"] },
     // Tigon Website (1)
     { id: "seed-pdec-tw-prod-branch", workspaceId: WORKSPACE_ID, projectId: tigonWebsite.id, authorId: GENT_ID, title: "Production deployt von v2-redesign, nicht main", context: "Coolify pullt direkt v2-redesign. Merge nach main nie gemacht.", decision: "v2-redesign = Prod. Feature-Branches mergen dort rein.", alternatives: "Fast-Forward v2-redesign → main (unnoetige Kopplung)", consequences: "main ist quasi tot, v2-redesign ist live.", status: "ACTIVE" as const, decidedAt: new Date("2026-04-05"), tags: ["website", "deployment"] },
-    // Vasko Website (2)
-    { id: "seed-pdec-vw-pro-bono", workspaceId: WORKSPACE_ID, projectId: vaskoWebsite.id, authorId: GENT_ID, title: "Pro Bono Website fuer Vasko", context: "Vasko = Kollege mit Modemarke-Startup.", decision: "Pro Bono als Einstieg, Beziehung aufbauen.", alternatives: "Bezahltes Projekt (persoenliche Beziehung, Early Stage)", consequences: "Portfolio-Stueck + Beziehung.", status: "ACTIVE" as const, decidedAt: new Date("2026-04-01"), tags: ["vasko", "strategy"] },
-    { id: "seed-pdec-vw-benchmark", workspaceId: WORKSPACE_ID, projectId: vaskoWebsite.id, authorId: GENT_ID, title: "Homepage-Redesign nach Fashion-Benchmark-Recherche", context: "Gap-Analyse zeigte 9 Luecken vs. Best Practices.", decision: "Top-5 nach ROI: Hero-Bild, 8 Sektionen, PDP Gallery, Hover-Image, Sticky CTA.", alternatives: "Alles auf einmal (zu wenig Produkte fuer manche Features)", consequences: "Data-driven Redesign.", status: "ACTIVE" as const, decidedAt: new Date("2026-04-01"), tags: ["vasko", "design"] },
     // VW Rosenheim (2)
     { id: "seed-pdec-vwr-parked", workspaceId: WORKSPACE_ID, projectId: vwRosenheim.id, authorId: GENT_ID, title: "Project PARKED — outside strategic radius", context: "VW Zentrum Rosenheim not in Tigon's geographic radius.", decision: "Project parked indefinitely. Code on GitHub for portfolio.", alternatives: "Continue development (wasted effort)", consequences: "Reactivate only if warm lead again.", status: "ACTIVE" as const, decidedAt: new Date("2026-03-29"), tags: ["vw-rosenheim", "status"] },
     { id: "seed-pdec-vwr-cleanup", workspaceId: WORKSPACE_ID, projectId: vwRosenheim.id, authorId: GENT_ID, title: "Build artifacts cleaned — 488MB recovered", context: "Build artifacts in vault wasting storage.", decision: "Deleted. Source code on GitHub as single source of truth.", alternatives: "Keep (wastes storage)", consequences: "488MB recovered.", status: "ACTIVE" as const, decidedAt: new Date("2026-03-29"), tags: ["vw-rosenheim", "cleanup"] },
@@ -2337,7 +2278,6 @@ async function main() {
     { id: "seed-ho-ht", kind: "HANDOFF" as const, projectId: hurghadaTours.id, authorId: GENT_ID, title: "Hurghada Tours — 17 echte Touren live, Featured Grid", occurredAt: new Date("2026-04-11"), content: "17 echte Touren integriert. Highlight-Block 6→5 Touren. Featured-Grid: 3+2 Layout. TourCard kompakter.", workDone: "Real catalog, Featured Grid, PR #3 merged", openItems: "Stats-Zahlen UWG raus, Impressum/Datenschutz, docs/project.yaml, Loom an Amo", landmines: "NIE gh pr merge --delete-branch bei dev→main. HMR blockiert Cross-Origin. Port 3000 stale.", nextAction: "Stats-Zahlen aus Hero raus", tags: ["hurghada"] },
     { id: "seed-ho-tcp", kind: "HANDOFF" as const, projectId: clientPortal.id, authorId: GENT_ID, title: "Client Portal — Multi-Tenancy Hardening + Nightly Export", occurredAt: new Date("2026-04-14"), content: "4 P0 Leaks + 8 FK-Injection-Stellen gefixt. Dashboard Deadlines Widget. Nightly-Export Cron live. /dev push durchgelaufen.", workDone: "Security fixes, Dashboard Widget, Export Script, /dev push", openItems: "Staging-Rebuild verifizieren, Seed-Script umschreiben, workspaceId propagation, /dev done", landmines: "Staging-DB Port 54329 nicht extern erreichbar. Dev-DB hat Live-Daten. Tenant-Leak-Pattern.", nextAction: "Browser-Test Multi-Assign auf Staging", tags: ["portal"] },
     { id: "seed-ho-tw", kind: "HANDOFF" as const, projectId: tigonWebsite.id, authorId: GENT_ID, title: "Tigon Website — Favicon getauscht", occurredAt: new Date("2026-04-14"), content: "Tigon-T Favicon (#EB7028 auf schwarz, multi-size ICO). Rebase von v2-redesign.", workDone: "Favicon, Rebase 25 Commits", openItems: "Google-Cache zeigt altes Favicon (1-4 Wochen). main bleibt stale.", landmines: "Prod-Branch = v2-redesign. Push = direkter Deploy. Kein dev Branch. Favicon redundant.", nextAction: "Offen — Einzelfix", tags: ["website"] },
-    { id: "seed-ho-vw", kind: "HANDOFF" as const, projectId: vaskoWebsite.id, authorId: GENT_ID, title: "Vasko — Homepage + PDP ueberarbeitet, Coolify deployed", occurredAt: new Date("2026-04-01"), content: "Hero, Announcement Bar, Editorial, Instagram, Newsletter. PDP Multi-Image Gallery. Sticky Mobile CTA. Shop-Filter fix. Deployed: five.surfingtigon.com.", workDone: "8 Homepage-Sektionen, PDP Gallery, Hover-Images, Coolify Deploy", openItems: "Stripe, Cart, Legal Pages, Newsletter Backend, Custom Domain", landmines: "Vercel-Deployment versehentlich angelegt+geloescht.", nextAction: "Link an Vasko schicken, Feedback einholen", tags: ["vasko"] },
     { id: "seed-ho-vwr", kind: "HANDOFF" as const, projectId: vwRosenheim.id, authorId: GENT_ID, title: "VW Rosenheim — PARKED", occurredAt: new Date("2026-03-31"), content: "Prototype built. Build artifacts cleaned (488MB). No active development.", workDone: "Prototype, build artifacts cleanup", nextAction: "None. Parked.", tags: ["vw-rosenheim"] },
   ];
 
@@ -2382,8 +2322,6 @@ async function main() {
     { id: "seed-cl-tcp-0413", kind: "CHANGELOG" as const, projectId: clientPortal.id, authorId: GENT_ID, title: "Schema-Redesign + Admin-Dashboard + Aufgaben + Wissen", occurredAt: new Date("2026-04-13"), content: "ClientStage (6 Werte). KnowledgeEntry (13 Kategorien) statt Note. Task-System (Board, Filter, Inline-Create). Wissen-Page (Markdown, Tags, Pin). Task-Detail/Edit.", tags: ["portal"] },
     // Tigon Website
     { id: "seed-cl-tw-0414", kind: "CHANGELOG" as const, projectId: tigonWebsite.id, authorId: GENT_ID, title: "Favicon + Portfolio-Section entfernt", occurredAt: new Date("2026-04-14"), content: "Tigon-T Favicon (multi-size ICO). Portfolio-Section von Homepage entfernt. allowedDevOrigins fuer Tailscale.", tags: ["website"] },
-    // Vasko Website
-    { id: "seed-cl-vw-init", kind: "CHANGELOG" as const, projectId: vaskoWebsite.id, authorId: GENT_ID, title: "Homepage + PDP + Shop + Coolify Deploy", occurredAt: new Date("2026-04-01"), content: "Hero, Announcement Bar, Editorial, Instagram, Newsletter CTA. PDP Gallery. Hover-Images. Shop-Filter. Sticky Mobile CTA. Deployed: five.surfingtigon.com.", tags: ["vasko"] },
     // VW Rosenheim
     { id: "seed-cl-vwr-init", kind: "CHANGELOG" as const, projectId: vwRosenheim.id, authorId: GENT_ID, title: "Initial Build + Parked", occurredAt: new Date("2026-03-29"), content: "Next.js 16.2 prototype. Parked — outside strategic radius. Build artifacts deleted (488MB).", tags: ["vw-rosenheim"] },
   ];
@@ -2404,8 +2342,6 @@ async function main() {
     { id: "seed-ke-plan-supabase-migration", workspaceId: WORKSPACE_ID, projectId: baubeleg.id, authorId: GENT_ID, title: "Supabase → Native Stack Migration Plan", content: "4 Phasen: Auth (bcryptjs+jose) DONE, Storage (MinIO) DONE, DB Connection Switch OFFEN, Cleanup DONE. Cookie-Config, JWT Claims, Token Refresh Flow, Security Checklist dokumentiert.", category: "PLAN" as const, tags: ["baubeleg", "migration"] },
     { id: "seed-ke-plan-werkzeug", workspaceId: WORKSPACE_ID, projectId: baubeleg.id, authorId: GENT_ID, title: "Werkzeug-Management — Spec Draft", content: "Werkzeuge nachvollziehbar zwischen Lager/Fahrzeug/Mitarbeiter bewegen. WerkzeugBewegung Log. Offene Entscheidungen: Ordnung, Dokumentation, UI-Eingabe, Zuordnungsmodell.", category: "PLAN" as const, tags: ["baubeleg", "feature"] },
     { id: "seed-ke-plan-hurghada-v1", workspaceId: WORKSPACE_ID, projectId: hurghadaTours.id, authorId: GENT_ID, title: "Hurghada Tours V1 Plan", content: "Reisebuero Hurghada. Mittelsmann-Modell. Branchen-Research: 5 Top-Performer analysiert. Key Insight: WhatsApp = Haupt-Buchungskanal, kein Payment-Gateway in V1. Site-Struktur, Tech-Stack (Next.js, Sanity CMS, next-intl), Feature-Slices.", category: "PLAN" as const, tags: ["hurghada"] },
-    { id: "seed-ke-plan-vasko-architecture", workspaceId: WORKSPACE_ID, projectId: vaskoWebsite.id, authorId: GENT_ID, title: "Vasko Architecture — Dark Luxury E-Commerce", content: "Stack: Next.js + Stripe (kein eigenes Backend). Keine Auth (Guest Checkout). Design: Schwarz + Crimson, Serif/Sans-Serif, viel Schwarzraum. E-Commerce: Cart localStorage → Stripe Checkout. 5 Feature-Slices.", category: "PLAN" as const, tags: ["vasko", "architecture"] },
-    { id: "seed-ke-plan-vasko-discovery", workspaceId: WORKSPACE_ID, projectId: vaskoWebsite.id, authorId: GENT_ID, title: "Vasko Discovery — Scope + DSGVO + Pre-Mortem", content: "Pro Bono. Brand-Website + E-Commerce Shop. DSGVO: LOW risk (nur Stripe Checkout). Pre-Mortem: Fotos, Stripe-Konto, Domain. Kein Blog, kein Login, kein CRM.", category: "PLAN" as const, tags: ["vasko", "discovery"] },
     // SPECS
     { id: "seed-ke-spec-baubeleg", workspaceId: WORKSPACE_ID, projectId: baubeleg.id, authorId: GENT_ID, title: "BauBeleg Functional Spec", content: "Mobile-first PWA. 2 Rollen: GF (Vollzugriff) + Mitarbeiter (eingeschraenkt). 5 Phasen: MVP DONE, Rapporte DONE, Multi-User DONE, Erweiterungen OFFEN, Polish OFFEN. Constraints: Rechtsverbindlich, BAG-Urteil 2022 Uhrzeiten, kein type=number.", category: "SPEC" as const, tags: ["baubeleg"] },
     { id: "seed-ke-spec-marketplace", workspaceId: WORKSPACE_ID, projectId: marketplace.id, authorId: GENT_ID, title: "Industrie-Marketplace Funktionsspezifikation v1.0", content: "3 Rollen: Admin, Hersteller, Besucher. Anfragen landen IMMER beim Redakteur. Hersteller-Freigabe-Workflow. Dashboard mit Kennzahlen. Provisionen manuell. 13 offene Punkte (Plattformname, Domain, etc.).", category: "SPEC" as const, tags: ["marketplace", "fachwelt"] },
@@ -2414,8 +2350,6 @@ async function main() {
     { id: "seed-ke-research-saas-split", workspaceId: WORKSPACE_ID, projectId: articleEditorSaas.id, authorId: GENT_ID, title: "SaaS Split: Code vs. n8n — 25 kundenspezifische Konfigpunkte", content: "Hartcodiert (universell): IMAP, Relevanz, Metadaten, Bild-Upload, Sprache, DB-Ops, WordPress API, Change-Agent. In n8n (pro Kunde): 14 Editor-Konfigs, 10+ Freigabe-Konfigs, 1 KI-Agent-Konfig. Posteingang+KI-Agent DONE.", category: "RESEARCH" as const, tags: ["fachwelt", "architecture"] },
     { id: "seed-ke-research-system-arch", workspaceId: WORKSPACE_ID, projectId: articleEditorSaas.id, authorId: GENT_ID, title: "Systemarchitektur — Article Editor SaaS", content: "5 Komponenten: Frontend (Vite/React), Supabase (selfhosted, DB+Storage+Auth), IMAP Poller (systemd), Hono API (Coolify), WordPress (4 Portale). 21 AI Calls pro Email worst case. n8n wird schrittweise ersetzt.", category: "SPEC" as const, tags: ["fachwelt", "architecture"] },
     { id: "seed-ke-research-whitelabel", workspaceId: WORKSPACE_ID, projectId: marketplace.id, authorId: GENT_ID, title: "Fachwelt White-Label Research — German Fachverlag Market", content: "€8.55B Markt, 46% digital. ~300 addressable Mittelstand publishers. Gap: Kein turnkey B2B marketplace als White-Label SaaS. Unit Economics: 5 clients Y1 = €55-110K. Pricing: €5-10K Setup + €500-1K/Mo SaaS.", category: "RESEARCH" as const, tags: ["fachwelt", "market-research"] },
-    { id: "seed-ke-research-vasko-brand", workspaceId: WORKSPACE_ID, projectId: vaskoWebsite.id, authorId: GENT_ID, title: "Society de Five Brand Analysis", content: "Instagram @societydefive. Dark Luxury Aesthetic: Schwarz + Crimson, Casino/Poker-Atmosphaere, cinematic Bildsprache. Tone: kryptisch, kurz, mysterioes. Fur Coat = Hero-Piece.", category: "RESEARCH" as const, tags: ["vasko", "brand"] },
-    { id: "seed-ke-research-vasko-bench", workspaceId: WORKSPACE_ID, projectId: vaskoWebsite.id, authorId: GENT_ID, title: "Fashion Website Benchmarks", content: "10+ Marken analysiert (Pangaia, Aime Leon Dore, Fear of God, COS, etc.). 3 Farbansaetze: Monochromatisch, Dark/Moody, Single Accent. Serif = Luxury-Signaling. Lifestyle-first Bildsprache.", category: "RESEARCH" as const, tags: ["vasko", "benchmarks"] },
     // PROJECT-LEVEL IDEAS
     { id: "seed-ke-idea-aes-crm-match", workspaceId: WORKSPACE_ID, projectId: articleEditorSaas.id, authorId: GENT_ID, title: "Kunden-Erkennung ohne KI via CRM-Match", content: "Absender-Email gegen CRM matchen statt o3-mini Metadaten-Extraktion. Firma, Ansprechpartner, Telefon direkt aus CRM.", category: "IDEA" as const, tags: ["fachwelt", "optimization"] },
     { id: "seed-ke-idea-bb-whatsapp", workspaceId: WORKSPACE_ID, projectId: baubeleg.id, authorId: GENT_ID, title: "BauBeleg Feature-Ideas: WhatsApp Share, Offline, Multilingual", content: "WhatsApp Share (One-tap PDF), Offline Mode (Service Worker), Multilingual (Albanian/Turkish), Rapporte+Zeiterfassung, Bescheinigungen-Hub, E-Rechnung Hook, Bautagebuch, Photo-GPS, Push Notifications, Bulk PDF, Template Library.", category: "IDEA" as const, tags: ["baubeleg", "features"] },
@@ -2440,8 +2374,8 @@ async function main() {
 
   console.log("\n✅ Seed complete!");
   console.log("─".repeat(50));
-  console.log("Clients:      Fachwelt (ACTIVE), Horbach (ACTIVE), Vasko (PRO_BONO), LUMINAR (WARM) + Demo Kunde");
-  console.log("Contacts:     Alija, Katrin, Marlon, Paul, Jonathan, Vasko, Hr. Eid + " + networkContacts.length + " Network");
+  console.log("Clients:      Fachwelt (ACTIVE), Horbach (ACTIVE), LUMINAR (WARM) + Demo Kunde");
+  console.log("Contacts:     Alija, Katrin, Marlon, Paul, Jonathan, Hr. Eid + " + networkContacts.length + " Network");
   console.log("Client User:  ap@fachwelt-verlag.de / portal2026");
   console.log("Projects:     20 total (incl. Tigon Operations, Steuerberater Demo, Article Editor Hub)");
   console.log("Milestones:   15");

@@ -14,6 +14,8 @@ const PUBLIC_ROUTES = [
 function isPublicRoute(pathname: string): boolean {
   if (PUBLIC_ROUTES.includes(pathname)) return true;
   if (pathname.startsWith("/api/public/")) return true;
+  // Agent API uses bearer-token auth in the route handler — skip cookie proxy.
+  if (pathname.startsWith("/api/agent/")) return true;
   if (pathname.startsWith("/_next") || pathname === "/favicon.ico") return true;
   return false;
 }

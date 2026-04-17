@@ -7,7 +7,6 @@ const validStages: ClientStage[] = [
   "COLD",
   "WARM",
   "ACTIVE",
-  "PRO_BONO",
   "PAUSED",
   "ENDED",
 ];
@@ -112,4 +111,31 @@ export async function PATCH(
   });
 
   return NextResponse.json({ client });
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ clientId: string }> }
+) {
+  const user = await getAuthUser();
+  if (!user || user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { clientId } = await params;
+
+  const existing = await prisma.client.findFirst({
+    where: { id: clientId, workspaceId: user.workspaceId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Client not found" }, { status: 404 });
+  }
+
+  await prisma.client.update({
+    where: { id: clientId },
+    data: { deletedAt: new Date() },
+  });
+
+  return NextResponse.json({ ok: true });
 }

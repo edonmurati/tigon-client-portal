@@ -69,7 +69,7 @@ async function seedWorkspace(label: string): Promise<SeededWorkspace> {
   });
 
   const contact = await prisma.contactPerson.create({
-    data: { clientId: client.id, name: `Contact ${label}`, email: `contact-${label}@test.local` },
+    data: { workspaceId: ws.id, clientId: client.id, name: `Contact ${label}`, email: `contact-${label}@test.local` },
   });
 
   const project = await prisma.project.create({
