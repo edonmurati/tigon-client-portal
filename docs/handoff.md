@@ -1,20 +1,23 @@
 # Handoff — Tigon Client Portal
-Letzte Session: 2026-04-16 (Gent)
+Letzte Session: 2026-04-17 (Gent)
 
 ## Was wurde gemacht
-- Phase 1-3 Data Migration abgeschlossen: Schema erweitert + Seed mit ALLEN Business-Daten aus ~/tigon/ und ~/projects/*/docs/
-- Admin-Login gefixt: Emails auf gent.cungu@/edon.murati@tigonautomation.de, Passwort tigon2026
-- Alle Seed-Scripts + CLAUDE.md auf neue Emails konsistent gemacht
+- Komplette ~/tigon/ Migration: 372 Files → 420 DB Records (251 KnowledgeEntry + 10 Credential + 159 Document)
+- 5 DSGVO-kritische compliance-Files nachtraeglich migriert (waren vom Python-Script geskippt)
+- Binaries/Scripts ins Document-Model inkl. lokalem Storage (uploads/migrated/, 129 MB)
+- 198 authorId=null Entries auf Admin gebackfillt
+- HABIT Server aus Server-Model geloescht
+- Schema-Integritaet verifiziert: 0 Orphans, 10/10 Creds entschluesselbar, alle Files auf Disk
 
 ## Was ist offen
-- Browser-Test: Portal durchklicken, pruefen ob alle 72 Decisions, 51 Journals, 49+ Knowledge Entries korrekt angezeigt werden
-- `/dev push` + `/dev done` stehen noch aus
-- Staging-DB hat die neuen Schema-Felder noch nicht (Migration muss auf Staging laufen)
+- Staging-DB syncen — lokal hat jetzt 420 Records, Staging ist alter Stand
+- ~/tigon/ physisch loeschen: Syncthing-Folder pausieren → `mv ~/tigon ~/tigon.archived` → 1 Woche Observation
+- Coolify Production-Deploy steht immer noch aus
 
 ## Landminen
-- **Seed braucht existierende User:** `seed-data.ts` macht `findFirstOrThrow` auf `gent.cungu@tigonautomation.de` — wenn die DB frisch ist, muss zuerst `seed-admin.ts` laufen (erstellt Workspace + Gent-User)
-- **seed-admin.ts erstellt nur Gent**, `seed-fixture.ts` erstellt Edon — beide muessen vor `seed-data.ts` laufen
-- **bcryptjs Hash-Timing:** Seed setzt Hash via `update`, aber wenn der Seed abbricht bevor der Hash-Block laeuft, bleibt der alte Hash. Bei Login-Problemen: Hash manuell verifizieren
+- **uploads/migrated/ ist NICHT in Git** (.gitignore'd per Default) — bei Server-Rebuild muss der Ordner aus Backup wiederhergestellt werden, sonst sind 159 Documents tot
+- **Staging-DB kennt diese 420 Records nicht** — beim naechsten Staging-Test wirken viele Bereiche leer, das ist kein Bug sondern Sync-Gap
+- **MAX_UPLOAD_SIZE_MB=50** default im Code — die .accdb (79MB) wurde nur durch Bypass-Script reingekriegt, normaler Upload-Flow wuerde sie abweisen
 
 ## Naechster Schritt
-Browser-Test auf http://habit:3002 — alle Admin-Bereiche durchklicken, dann `/dev push`.
+Staging-DB syncen (pg_dump lokal → psql staging), damit Staging den vollstaendigen Datenbestand hat.

@@ -102,8 +102,7 @@ arbeits-branch (lokal) ──/dev push──→ dev (Coolify Staging) ──/dev
 - Flat role model: ADMIN | CLIENT
 
 ## Collab Status
-- **Last Session:** 2026-04-16 (Gent)
+- **Last Session:** 2026-04-17 (Gent)
 - **Last Author:** Gent
-- **Phase:** Phase 1-3 Data Migration complete. Schema erweitert (ContactPerson.workspaceId, Workspace description/objective/techStack/mrrCents/burnRateCents). Seed enthält alle Business-Daten aus ~/tigon/ + ~/projects/*/docs/ (72 Decisions, 51 Journals, 49+ Knowledge Entries, 85 Tasks, 16 Contacts). Admin-Login auf gent.cungu@/edon.murati@ umgestellt.
-- **Next Action:** Browser-Test im Portal — alle Bereiche durchklicken (Decisions, Wissen, Aufgaben, Journal). Danach `/dev push` + `/dev done`.
-- **Next Action:** Staging im Browser smoke-testen (http://habit:3001/admin/aufgaben/cmnyk5ama0002vqfl2xq9yxwh fuer Multi-Assign, dann `/dev done` → main).
+- **Phase:** Phase 4 Full Migration complete. Alle 372 Files aus ~/tigon/ in DB (251 KnowledgeEntry + 10 Credential + 159 Document). Schema-Integritaet verifiziert (0 Orphans, 10/10 Creds entschluesselbar, 159/159 Files auf Disk). DB-Endstand: 3 User, 13 Client, 21 Project, 86 Task, 251 KnowledgeEntry, 10 Credential, 159 Document, 2 Server, 218 Activity.
+- **Next Action:** Staging-DB syncen (Migration-Run gegen Coolify-Postgres).

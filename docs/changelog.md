@@ -1,5 +1,14 @@
 # Changelog — Tigon Client Portal
 
+### 2026-04-17 (Gent)
+- Migration Phase 4 abgeschlossen: Alle 372 Files aus ~/tigon/ in DB (251 KnowledgeEntry + 10 Credential + 159 Document = 420 Records)
+- 10 Credentials aus *credentials*.md in Credential-Model migriert (AES-256-GCM, alle entschluesselbar)
+- 5 compliance-Files (AVV-Checklist, Incident Response Playbook, npm audit Control, Verarbeitungsverzeichnis, FinSense Demo) nachtraeglich migriert — waren vom Python-Script durch SKIP_DIRS uebersprungen
+- 159 Binaries/Scripts (75 PNG Screenshots, 30 .py, 26 .pyc, 16 CSV, 1 .accdb 79MB, diverse JSON/SQL/HTML) ins Document-Model inkl. lokalem Storage unter `uploads/migrated/`
+- 198 KnowledgeEntry mit `authorId=null` auf Admin-User gebackfillt
+- HABIT Server aus Server-Model hart geloescht (kein Kunden-Server, gehoert in globale CLAUDE.md)
+- Schema-Integritaet verifiziert: 0 Orphans, 0 cross-workspace leaks, 159/159 Document-Files auf Disk vorhanden
+
 ### 2026-04-16 (Gent)
 - Schema: ContactPerson.workspaceId hinzugefuegt (Netzwerk-Kontakte ohne Client/Lead moeglich)
 - Schema: Workspace erweitert um description, objective, techStack, mrrCents, burnRateCents

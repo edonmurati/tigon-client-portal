@@ -1,5 +1,13 @@
 # Decisions — Tigon Client Portal
 
+## 2026-04-17: Binaries/Scripts ins Document-Model statt nur MD-Files
+**Warum:** ~/tigon/ enthielt 159 Nicht-Text-Files (Screenshots, Python-Scripts, CSV, .accdb). Ohne Migration waren die nach rm ~/tigon weg. Document-Model war da, war aber leer — passt perfekt (workspaceId, clientId, storagePath, mimeType). Lokales Storage via uploads/migrated/.
+**Alternativen:** (1) Nur MD migrieren, Binaries im Filesystem lassen — verworfen, Ziel war vollstaendiger Abzug. (2) Alles in S3/MinIO — verworfen, lokales uploads/ reicht fuer den Bestand, Migration auf MinIO kann spaeter einmalig erfolgen. (3) Base64 in KnowledgeEntry — verworfen, missbraucht das Content-Feld.
+
+## 2026-04-17: HABIT Server raus aus Server-Model
+**Warum:** Server-Model ist fuer Kunden-Infrastruktur (Hetzner VPS, MinIO) gedacht. HABIT Server ist mein Arbeitsrechner, gehoert in globale CLAUDE.md (Dev-Umgebung), nicht in Portal-DB.
+**Alternativen:** Als "internal" markieren / clientId=tigon-intern — verworfen, verwaessert die Semantik von Server (= Kundenleistung oder Infra-Kostenstelle).
+
 ## 2026-04-16: Admin-User Emails auf volle Domain-Adressen
 **Warum:** Login mit `gent@tigonautomation.de` war inkonsistent mit der realen Email `gent.cungu@tigonautomation.de`. Operator konnte sich nicht einloggen. Alle Seed-Scripts, CLAUDE.md und DB auf `gent.cungu@` / `edon.murati@` umgestellt.
 **Alternativen:** Kurzform behalten und im Login-Flow aliasing machen — verworfen, unnoetige Komplexitaet.
